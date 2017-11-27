@@ -14,6 +14,12 @@
    - `pip install django`
  * pymysql
    - `pip install pymysql`
+ * mysql 설치 후 다음 각 부분에서의 utf-8 설정 확인할 것
+   - mysql 전체 설정
+   - 새로 생성되는 전체 테이블 설정
+   - 미리 테이블을 만들어둔 경우 위의 설정이 적용되지 않으므로 직접 수정해야 함
+     + 현존하는 모든 테이블 각각의 설정
+     + 각 테이블의 모든 열 각각의 설정
  * mysql에서 gk 데이터베이스 생성해둘 것
    - `create database gk;`
    - `show databases;`로 확인 가능

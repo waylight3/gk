@@ -75,12 +75,15 @@ WSGI_APPLICATION = 'gk.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
+with open('password.stt', 'r') as fp:
+    db_pw = fp.read().strip()
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'gk',
         'USER': 'root',
-        'PASSWORD': '1475',
+        'PASSWORD': db_pw,
         'HOST':'',
         'PORT':'',
     }

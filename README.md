@@ -29,12 +29,12 @@
 ## 코드 작성 안내
  1. 내가 만들 구조를 머릿속에 떠올립니다.
  1. `url.py`에서 적절한 주소를 할당해줍니다.
-   - 인자를 추가로 받으려면 `url(r'^(?P<grouplink>[^/]+)/board/edit/(?P<article_id>\d+)$', views.boardedit, name='boardedit'),`와 같이 작성합니다.
+   1. 인자를 추가로 받으려면 `url(r'^(?P<grouplink>[^/]+)/board/edit/(?P<article_id>\d+)$', views.boardedit, name='boardedit'),`와 같이 작성합니다.
  1. `view.py`에서 서버 로직을 처리할 함수를 작성합니다.
-   - 함수 이름은 `url.py`에서 설정한 함수 이름과 같아야합니다.
-   - 반드시 `request`가 첫 번째 인자여야합니다.
-   - 인자를 추가로 받은 경우 `def boardedit(request, grouplink, article_id):`와 같이 작성합니다.
+   1. 함수 이름은 `url.py`에서 설정한 함수 이름과 같아야합니다.
+   1. 반드시 `request`가 첫 번째 인자여야합니다.
+   1. 인자를 추가로 받은 경우 `def boardedit(request, grouplink, article_id):`와 같이 작성합니다.
  1. 해당 페이지의 `.html` 파일을 작성하고 `view.py`와 연결해줍니다.
-   - `return render(request, 'group/edit.html', data)`와 같이 작성하면 됩니다.
-   - 추가로 프론트 작업을 진행합니다.
+   1. `return render(request, 'group/edit.html', data)`와 같이 작성하면 됩니다.
+   1. 추가로 프론트 작업을 진행합니다.
  1. 완성!

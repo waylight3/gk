@@ -8,6 +8,10 @@
  * 한중혁
  * 한호재
 
+## 참고자료
+ * https://docs.djangoproject.com/ko/1.11
+ * http://pythonstudy.xyz/python/article/301-Django-%EC%86%8C%EA%B0%9C
+
 ## 설치하기
  * python 3.5 이상 (virtualenv 가상환경 사용 권장)
  * Django 1.11 이상

@@ -19,6 +19,21 @@ def index(request):
 	}
 	return render(request, 'all/index.html', data)
 
+def spot(request):
+	ret = Spot.objects.all()
+	if request.method == 'POST':
+		o = request.POST.get('option', False)
+		q = request.POST['spot_query']
+		c = Cctv.objects.filter(name=q)
+		print(c)
+		if c.count()>0:	
+			ret = Spot.objects.filter(cctv=c)
+		else:
+			ret = None
+	data = {
+		'spot' : ret,
+	}
+	return render(request, 'all/spot.html', data)
 def cctv(request):
 	ret = Cctv.objects.all()
 	if request.method == 'POST':
@@ -43,4 +58,3 @@ def cctv(request):
 
 
 	return render(request, 'all/cctv.html', data)
-

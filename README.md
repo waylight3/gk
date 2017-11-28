@@ -2,6 +2,7 @@
  * [참가자](#참가자)
  * [설치하기](#설치하기)
  * [코드 작성 안내](#코드-작성-안내)
+ * [코드 규칙](#코딩-규칙)
 
 ## 참가자
  * 이도현
@@ -40,8 +41,44 @@
    - 인자를 추가로 받은 경우 `def boardedit(request, grouplink, article_id):`와 같이 작성합니다.
    - 함수의 마지막에는 `return render(request, 'group/edit.html', data)`와 같이 작성하면 됩니다.
  * 해당 페이지의 `.html` 파일을 작성합니다.
-   - `{% for tv in tv_list %}`
-   - `{{ tv.name }} / {{ tv.pk }}`
+   - `{% for c in cctvs %}`
+   - `{{ c.name }} / {{ c.pk }}`
    - `{% endfor %}`
-   - 위와 같이 `tv_list`를 넘겨주려면 `view.py`에서 `data['tv_list']`에 리스트를 넣어두면 됩니다.
+   - 위와 같이 `cctvs`를 넘겨주려면 `view.py`에서 `data['cctvs']`에 리스트를 넣어두면 됩니다.
  * 완성!
+
+## 코딩 규칙
+ * `view.py`에서 함수 이름은 소문자로만 구성합니다. 필요한 경우 언더바(`_`)를 사용합니다.
+   - 예: `def cctv_info(request, cctv_id):` `def spot_info(request, spot_id):`
+ * 해당 변수가 리스트인 경우 변수명이 `s`로 끝나도록 합니다.
+   - 예: `cctvs` `spots`
+ * `.html` 파일에서 이터레이터의 이름은 가급적 해당 리스트의 첫 글자로 합니다.
+   - `{% for c in cctvs %}` `{% for s in spots %}`
+ * `.html` 파일에서 폼 작성시 요소들의 `name`, `id`, `class` 속성에 띄어쓰기가 필요한 경우 중간바(`-`)를 사용합니다.
+   - 예: `cctv-name` `spot-name`
+ * `view.py`에서 함수와 함수 사이에는 한 칸 띄어씁니다.
+   - 예:
+```
+def aaa(request):
+    # code
+    # code
+
+def bbb(request):
+    # code
+    # code
+```
+ * `view.py`에서 POST 처리가 필요한 경우 다음과 같은 양식을 사용합니다.
+```
+def aaa(request):
+    ret = None
+    if request.method == 'POST':
+        q = request.POST['query']
+        cctv = Cctv.objects.filter(name=q)
+        if cctv.count() > 0:
+            ret = cctv[0]
+        else
+            ret = None
+    data = {
+        'cctvs':ret,
+    }
+```

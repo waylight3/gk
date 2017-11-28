@@ -1,0 +1,30 @@
+{% extends "all/base.html" %}
+
+{% block title %}Title{% endblock title %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>모델명</th>
+        <th>설치날짜</th>
+        <th>책임자</th>
+        <th>공간</th>
+    </tr>
+    {% for c in cctv %}
+    <tr>
+        <td>{{c.name}}</td>
+        <td>{{c.start_date}}</td>
+        <td>{{c.manager.name}}</td>
+        <td>{{c.spots}}</td>
+    </tr>
+    {% endfor %}
+</table>
+<form action="" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="radio" name="option" value="name" checked> 모델명
+    <input type="radio" name="option" value="start_date"> 설치날짜
+    <input type="radio" name="option" value="manager"> 책임자
+    <input type="text" name="cctv_query">
+    <input type="submit" >
+</form>
+{% endblock content %}

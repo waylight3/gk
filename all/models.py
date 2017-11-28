@@ -20,7 +20,7 @@ class Spot(models.Model):
 	address = models.CharField(max_length=128, default='주소')
 
 	def __str__(self):
-		return '%s' % address
+		return '%s' % self.address
 
 class Cctv(models.Model):
 	name = models.CharField(max_length=128, default='이름')
@@ -37,7 +37,7 @@ class Video(models.Model):
 	cctv = models.ForeignKey(Cctv, blank=True, null=True, default=None, related_name='cctv_videos')
 
 	def __str__(self):
-		return '%s(%s)' % (name, ext)
+		return '%s(%s)' % (self.name, self.ext)
 
 class Meta(models.Model):
 	name = models.CharField(max_length=128, default='이름')
@@ -78,7 +78,7 @@ class Neighbor(models.Model):
 	spot2 = models.ForeignKey(Spot, blank=True, null=True, default=None, related_name='spot2_neighbors')
 
 	def __str__(self):
-		return '%s' % name
+		return '%s' % self.name
 
 class Sequence(models.Model):
 	neighbors = models.ManyToManyField(Neighbor, blank=True, symmetrical=True, related_name='neighbor_seqs')

@@ -10,7 +10,6 @@
 			<th>floor_no</th>
 			<th>dep_name</th>
 			<th>address</th>
-			<th>cctv</th>
 		</tr>
 		{% for c in spot %}
 		<tr>
@@ -18,20 +17,21 @@
 			<td>{{c.floor_no}}</td>
 			<td>{{c.dep_name}}</td>
 			<td>{{c.address}}</td>
-			<td>
-				{% for s in c.spot_cctvs.all %}
-				{{s.name}}
-				{% endfor %}
-				</td>
-				
 		</tr>
 		{% endfor %}
 	</table>
 </div>
-<form action="" method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="radio" name="option" value="cctv"> 해당cctv
-    <input type="text" name="spot_query">
-    <input type="submit" >
-</form>
+<div class="container" style = "width:70%">
+  <div class="row">
+    <div class="col-md-1">
+      option
+    </div>
+    <div class="col-md-10">
+      
+    </div>
+    <div class="col-md-1">
+      search
+    </div>
+</div>
+</div>
 {% endblock content %}

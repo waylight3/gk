@@ -11,7 +11,7 @@ from ipware.ip import get_ip
 import html, difflib, json
 from django.core.mail import send_mail
 from django.http import JsonResponse
-
+from all.models import *
 def index(request):
 	data = {
 		'name':'hi',
@@ -19,7 +19,20 @@ def index(request):
 	return render(request, 'all/index.html', data)
 
 def spot(request):
+
+
+	ret = Spot.objects.all()
+	if request.method == 'POST':
+		o = request.POST.get('option', False)
+		q = request.POST['spot_query']
+		c = Cctv.objects.filter(name=q)
+		print(c)
+		if c.count()>0:	
+			ret = Spot.objects.filter(cctv=c)
+		else:
+			ret = None
+
 	data = {
-		'spot':'A527',
+		'spot' : ret,
 	}
 	return render(request, 'all/spot.html', data)

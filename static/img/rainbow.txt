@@ -1,0 +1,16 @@
+﻿<script type="text/javascript">
+var colors = ["red","orange","yellow","green","blue","navy","purple"];
+var cnt = 0;
+$(document).ready(function() {
+	setInterval(function() {
+		cnt += 1;
+		var n = colors.length;
+		$(".rainbow").each(function(index) {
+  		var len = parseInt($(this).attr('data-length'));
+			for (var i=0; i<len; i++) {
+				$(this).children("span").eq(i).css('color',colors[(cnt+i)%n]);
+			}
+		});
+	}, 100);
+});
+</script>

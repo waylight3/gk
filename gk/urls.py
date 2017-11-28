@@ -21,7 +21,7 @@ from all import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^spot/', views.spot),
+    url(r'^spot', views.spot),
     url(r'^cctv', views.cctv),
     url(r'^', views.index)     # should be the last one
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

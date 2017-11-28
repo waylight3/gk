@@ -34,6 +34,7 @@ def spot(request):
 		'spot' : ret,
 	}
 	return render(request, 'all/spot.html', data)
+
 def cctv(request):
 	ret = Cctv.objects.all()
 	if request.method == 'POST':
@@ -50,11 +51,7 @@ def cctv(request):
 				ret = Cctv.objects.filter(manager=m)
 			else:
 				ret = None
-
 	data = {
 		'cctv': ret,
 	}
-
-
-
 	return render(request, 'all/cctv.html', data)

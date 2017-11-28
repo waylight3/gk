@@ -7,10 +7,93 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>{% block title %}Title{% endblock title %}</title>
+	<title>{% block title %}{% endblock title %}</title>
+	<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/app.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/blue.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/font-awesome.min.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/default.css' %}">
 </head>
 <body>
-	{% block content %}
-	{% endblock content %}
+	<div class="header">
+		<nav class="navbar navbar-default" role="navigation">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="/">
+						<img src="{% static 'img/nav_logo_main.png' %}">
+					</a>
+				</div>
+				<div class="collapse navbar-collapse navbar-responsive-collapse">
+					<ul class="nav navbar-nav">
+						<li class="nav-item">
+							<a href="/my">
+							<i class="fa fa-book fa-fw"></i>
+							MY
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="/cctv">
+							<i class="fa fa-book fa-fw"></i>
+							CCTV
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="/spot">
+							<i class="fa fa-cubes fa-fw"></i>
+							공간
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="/neighbor">
+							<i class="fa fa-cloud-download fa-fw"></i>
+							이웃공간
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="/sequence">
+							<i class="fa fa-share-alt fa-fw"></i>
+							시퀀스
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="/meta">
+							<i class="fa fa-calendar fa-fw"></i>
+							메타로그 및 영상
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="/manage">
+							<i class="fa fa-tasks fa-fw"></i>
+							관리
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="/login">
+							<i class="fa fa-tasks fa-fw"></i>
+							로그인
+							</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+	</div>
+	<div class="content-wrapper">
+		<article class="user-article">
+			{% block content %}
+			{% endblock content %}
+		</article>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="{% static 'js/bootstrap.min.js' %}"></script>
+	﻿{% block javascript %}
+	{% endblock javascript %}
 </body>
 </html>

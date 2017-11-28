@@ -12,15 +12,14 @@ import html, difflib, json
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from all.models import *
+
 def index(request):
 	data = {
-		'name':'hi',
+		'name':'ㅎㅇㅎㅇ',
 	}
 	return render(request, 'all/index.html', data)
 
 def spot(request):
-
-
 	ret = Spot.objects.all()
 	if request.method == 'POST':
 		o = request.POST.get('option', False)
@@ -31,8 +30,31 @@ def spot(request):
 			ret = Spot.objects.filter(cctv=c)
 		else:
 			ret = None
-
 	data = {
 		'spot' : ret,
 	}
 	return render(request, 'all/spot.html', data)
+def cctv(request):
+	ret = Cctv.objects.all()
+	if request.method == 'POST':
+		o = request.POST['option']
+		q = request.POST['cctv_query']
+		print(o)
+		if o == 'name':
+			ret = Cctv.objects.filter(name=q)
+		elif o == 'start_date':
+			ret = Cctv.objects.filter(start_date=q)
+		elif o == 'manager':
+			if Manager.objects.filter(name=q).count() > 0:
+				m = Manager.objects.get(name=q)
+				ret = Cctv.objects.filter(manager=m)
+			else:
+				ret = None
+
+	data = {
+		'cctv': ret,
+	}
+
+
+
+	return render(request, 'all/cctv.html', data)

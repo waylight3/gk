@@ -15,7 +15,7 @@ from all.models import *
 
 def index(request):
 	data = {
-		'name':'hi',
+		'name':'ㅎㅇㅎㅇ',
 	}
 	return render(request, 'all/index.html', data)
 

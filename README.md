@@ -38,7 +38,10 @@
    - 함수 이름은 `url.py`에서 설정한 함수 이름과 같아야합니다.
    - 반드시 `request`가 첫 번째 인자여야합니다.
    - 인자를 추가로 받은 경우 `def boardedit(request, grouplink, article_id):`와 같이 작성합니다.
- * 해당 페이지의 `.html` 파일을 작성하고 `view.py`와 연결해줍니다.
-   - `return render(request, 'group/edit.html', data)`와 같이 작성하면 됩니다.
-   - 추가로 프론트 작업을 진행합니다.
+   - 함수의 마지막에는 `return render(request, 'group/edit.html', data)`와 같이 작성하면 됩니다.
+ * 해당 페이지의 `.html` 파일을 작성합니다.
+   - `{% for tv in tv_list %}`
+   - `{{ tv.name }} / {{ tv.pk }}`
+   - `{% endfor %}`
+   - 위와 같이 `tv_list`를 넘겨주려면 `view.py`에서 `data['tv_list']`에 리스트를 넣어두면 됩니다.
  * 완성!

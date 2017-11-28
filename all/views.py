@@ -17,3 +17,9 @@ def index(request):
 		'name':'hi',
 	}
 	return render(request, 'all/index.html', data)
+
+def spot(request):
+	data = {
+		'spot':'A527',
+	}
+	return render(request, 'all/spot.html', data)

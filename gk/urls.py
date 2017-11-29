@@ -27,5 +27,5 @@ urlpatterns = [
     url(r'^logout', views.logout),
     url(r'^my', views.my),
     url(r'^manage', views.manage),
-    url(r'^', views.index)     # should be the last one
+    url(r'^$', views.index)     # should be the last one
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

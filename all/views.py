@@ -142,9 +142,9 @@ def manage(request):
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    users = Manager.objects.filter(charge=False)
+    users = Manager.objects.all()
     data = {
         'userinfo':userinfo,
-        'uesrs': users,
+        'users': users,
     }
     return render(request, 'all/manage.html', data)

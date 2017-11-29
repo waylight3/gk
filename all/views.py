@@ -19,6 +19,38 @@ def index(request):
 	}
 	return render(request, 'all/index.html', data)
 
+def login(request):
+	login_fail = None
+	login_fail_message = None
+
+	if request.user.is_authenticated():
+		return HttpResponseRedirect('/')
+
+	if request.method == 'POST':
+		username = request.POST['user_id']
+		password = request.POST['user_pw']
+
+		user = authenticate(username=username, password=password)
+
+		if user is not None:
+			auth_login(request, user)
+			return HttpResponseRedirect('/')
+		else:
+			login_fail = True
+			login_fail_message = '아이디나 비밀번호가 올바르지 않습니다.'
+
+	data = {
+		'login_fail':login_fail,
+		'login_fail_message':login_fail_message,
+	}
+
+	return render(request, 'all/login.html', data)
+
+def logout(request):
+	auth_logout(request)
+	return HttpResponseRedirect('/')
+
+
 def spot(request):
 	ret = Spot.objects.all()
 	if request.method == 'POST':
@@ -31,7 +63,7 @@ def spot(request):
 		else:
 			ret = None
 	data = {
-		'spot' : ret,
+		'spot':ret,
 	}
 	return render(request, 'all/spot.html', data)
 
@@ -52,6 +84,6 @@ def cctv(request):
 			else:
 				ret = None
 	data = {
-		'cctv': ret,
+		'cctv':ret,
 	}
 	return render(request, 'all/cctv.html', data)

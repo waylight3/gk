@@ -4,29 +4,29 @@
 
 {% block content %}
 <div>
-	<table border = "2" style = "width:100%">
-		<tr>
-			<th>indoor_loc</th>
-			<th>floor_no</th>
-			<th>dep_name</th>
-			<th>address</th>
-			<th>cctv</th>
-		</tr>
-		{% for c in spot %}
-		<tr>
-			<td>{{c.indoor_loc}}</td>
-			<td>{{c.floor_no}}</td>
-			<td>{{c.dep_name}}</td>
-			<td>{{c.address}}</td>
-			<td>
-				{% for s in c.spot_cctvs.all %}
-				{{s.name}}
-				{% endfor %}
-				</td>
-				
-		</tr>
-		{% endfor %}
-	</table>
+    <table border = "2" style = "width:100%">
+        <tr>
+            <th>indoor_loc</th>
+            <th>floor_no</th>
+            <th>dep_name</th>
+            <th>address</th>
+            <th>cctv</th>
+        </tr>
+        {% for c in spot %}
+        <tr>
+            <td>{{c.indoor_loc}}</td>
+            <td>{{c.floor_no}}</td>
+            <td>{{c.dep_name}}</td>
+            <td>{{c.address}}</td>
+            <td>
+                {% for s in c.spot_cctvs.all %}
+                {{s.name}}
+                {% endfor %}
+                </td>
+                
+        </tr>
+        {% endfor %}
+    </table>
 </div>
 <form action="" method="POST" enctype="multipart/form-data">
     {% csrf_token %}

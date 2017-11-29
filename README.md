@@ -54,6 +54,8 @@
    - 예: `def cctv_info(request, cctv_id):` `def spot_info(request, spot_id):`
  * 해당 변수가 리스트인 경우 변수명이 `s`로 끝나도록 합니다.
    - 예: `cctvs` `spots`
+ * `.html` 파일의 이름은 알파벳 소문자와 언더바(`_`)만을 사용합니다.
+   - 예: `cctv_info.html`
  * `.html` 파일에서 이터레이터의 이름은 가급적 해당 리스트의 첫 글자로 합니다.
    - `{% for c in cctvs %}` `{% for s in spots %}`
  * `.html` 파일에서 폼 작성시 요소들의 `name`, `id`, `class` 속성에 띄어쓰기가 필요한 경우 중간바(`-`)를 사용합니다.

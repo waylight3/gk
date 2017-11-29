@@ -20,39 +20,38 @@ def index(request):
     return render(request, 'all/index.html', data)
 
 def login(request):
-	login_fail = None
-	login_fail_message = None
+    login_fail = None
+    login_fail_message = None
 
-	if request.user.is_authenticated():
-		return HttpResponseRedirect('/')
+    if request.user.is_authenticated():
+        return HttpResponseRedirect('/')
 
-	if request.method == 'POST':
-		username = request.POST['user_id']
-		password = request.POST['user_pw']
+    if request.method == 'POST':
+        username = request.POST['user_id']
+        password = request.POST['user_pw']
 
-		user = authenticate(username=username, password=password)
+        user = authenticate(username=username, password=password)
 
-		if user is not None:
-			auth_login(request, user)
-			return HttpResponseRedirect('/')
-		else:
-			login_fail = True
-			login_fail_message = '아이디나 비밀번호가 올바르지 않습니다.'
+        if user is not None:
+            auth_login(request, user)
+            return HttpResponseRedirect('/')
+        else:
+            login_fail = True
+            login_fail_message = '아이디나 비밀번호가 올바르지 않습니다.'
 
-	data = {
-		'login_fail':login_fail,
-		'login_fail_message':login_fail_message,
-	}
+    data = {
+        'login_fail':login_fail,
+        'login_fail_message':login_fail_message,
+    }
 
-	return render(request, 'all/login.html', data)
+    return render(request, 'all/login.html', data)
 
 def logout(request):
-	auth_logout(request)
-	return HttpResponseRedirect('/')
+    auth_logout(request)
+    return HttpResponseRedirect('/')
 
 
 def spot(request):
-<<<<<<< HEAD
     ret = Spot.objects.all()
     if request.method == 'POST':
         o = request.POST.get('option', False)
@@ -88,40 +87,3 @@ def cctv(request):
         'cctv': ret,
     }
     return render(request, 'all/cctv.html', data)
-=======
-	ret = Spot.objects.all()
-	if request.method == 'POST':
-		o = request.POST.get('option', False)
-		q = request.POST['spot_query']
-		c = Cctv.objects.filter(name=q)
-		print(c)
-		if c.count()>0:	
-			ret = Spot.objects.filter(cctv=c)
-		else:
-			ret = None
-	data = {
-		'spot':ret,
-	}
-	return render(request, 'all/spot.html', data)
-
-def cctv(request):
-	ret = Cctv.objects.all()
-	if request.method == 'POST':
-		o = request.POST['option']
-		q = request.POST['cctv_query']
-		print(o)
-		if o == 'name':
-			ret = Cctv.objects.filter(name=q)
-		elif o == 'start_date':
-			ret = Cctv.objects.filter(start_date=q)
-		elif o == 'manager':
-			if Manager.objects.filter(name=q).count() > 0:
-				m = Manager.objects.get(name=q)
-				ret = Cctv.objects.filter(manager=m)
-			else:
-				ret = None
-	data = {
-		'cctv':ret,
-	}
-	return render(request, 'all/cctv.html', data)
->>>>>>> 52bd83d25b3a5c8da63e5b1b33953ccf6b0a68e4

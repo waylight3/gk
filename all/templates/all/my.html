@@ -1,0 +1,86 @@
+{% extends "all/base.html" %}
+
+{% block title %}My Page :: 고래카레{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+        <div class="headline"><h4>내 정보</h4></div>
+        <form role="form" method="post" class="form-horizontal">{% csrf_token %}
+            <input type="hidden" name="form-type" value="edit-info">
+            <div class="form-group">
+                <label class="control-label col-sm-2">아이디</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control no-radius" name="user-id" id="user-id" value="{{ userinfo.user.username }}" disabled>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">이름</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control no-radius" name="user-name" id="user-name" value="{{ userinfo.name }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">전화번호</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control no-radius" name="user-cell" id="user-cell" value="{{ userinfo.cell }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">권한</label>
+                <div class="col-sm-8">
+                    {% if userinfo.charge %}<span class="label label-info" style="font-size: 1.2em;">최고관리자</span>{% else %}<span class="label label-success">일반관리자</span>{% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-8">
+                    <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 저장하기</button>
+                </div>
+            </div>
+        </form>
+        <div class="headline"><h4>비밀번호 변경</h4></div>
+        <form role="form" method="post" class="form-horizontal">{% csrf_token %}
+            <input type="hidden" name="form-type" value="edit-pw">
+            <div class="form-group">
+                <label class="control-label col-sm-2">현재 비밀번호</label>
+                <div class="col-sm-8">
+                    <input type="password" class="form-control no-radius" name="user-pw" id="user-pw" value="" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">새 비밀번호</label>
+                <div class="col-sm-8">
+                    <input type="password" class="form-control no-radius" name="user-pw1" id="user-pw1" value="" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">비밀번호 재입력</label>
+                <div class="col-sm-8">
+                    <input type="password" class="form-control no-radius" name="user-pw2" id="user-pw2" value="" required>
+                </div>
+            </div>
+            {% if pw_fail %}
+            <div class="form-group">
+                <label class="control-label col-sm-2">&nbsp;</label>
+                <div class="col-sm-8">
+                    <p><span class="label label-warning">{{ pw_fail_message }}</span></p>
+                </div>
+            </div>
+            {% endif %}
+            {% if pw_success %}
+            <div class="form-group">
+                <label class="control-label col-sm-2">&nbsp;</label>
+                <div class="col-sm-8">
+                    <p><span class="label label-success">{{ pw_success_message }}</span></p>
+                </div>
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-8">
+                    <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 변경하기</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

@@ -25,5 +25,6 @@ urlpatterns = [
     url(r'^cctv', views.cctv),
     url(r'^login', views.login),
     url(r'^logout', views.logout),
+    url(r'^my', views.my),
     url(r'^', views.index)     # should be the last one
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

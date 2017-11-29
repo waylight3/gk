@@ -21,11 +21,12 @@ from all import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^spot', views.spot),
-    url(r'^cctv', views.cctv),
-    url(r'^login', views.login),
-    url(r'^logout', views.logout),
-    url(r'^my', views.my),
-    url(r'^manage', views.manage),
-    url(r'^$', views.index)     # should be the last one
+    url(r'^spot$', views.spot),
+    url(r'^cctv$', views.cctv),
+    url(r'^login$', views.login),
+    url(r'^logout$', views.logout),
+    url(r'^my$', views.my),
+    url(r'^manage$', views.manage),
+    url(r'^manage/edit/(?P<user_id>\d+)$', views.manage_edit),
+    url(r'^$', views.index)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

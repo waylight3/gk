@@ -19,7 +19,7 @@
                 <td>{{ u.user.username }}</td>
                 <td>{{ u.name }}</td>
                 <td>{{ u.cell }}</td>
-                <td><a href="">수정</a></td>
+                <td><a href="/manage/edit/{{ u.user.pk }}">수정</a></td>
             </tr>
             {% endfor %}
         </tbody>

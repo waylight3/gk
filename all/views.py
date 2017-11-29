@@ -144,7 +144,27 @@ def manage(request):
         return HttpResponseRedirect('/')
     users = Manager.objects.all()
     data = {
-        'userinfo':userinfo,
+        'userinfo': userinfo,
         'users': users,
     }
     return render(request, 'all/manage.html', data)
+
+def manage_edit(request, user_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(pk=user_id)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    cctvs =  Cctv.objects.filter(manager=userinfo)
+    data = {
+        'userinfo': userinfo,
+        'cctvs': cctvs,
+    }
+    return render(request, 'all/manage_edit.html', data)

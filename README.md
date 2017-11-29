@@ -12,6 +12,7 @@
 ## 참고자료
  * https://docs.djangoproject.com/ko/1.11
  * http://pythonstudy.xyz/python/article/301-Django-%EC%86%8C%EA%B0%9C
+ * http://schoolofweb.net/blog/posts/tag/django/
 
 ## 설치하기
  * python 3.5 이상 (virtualenv 가상환경 사용 권장)
@@ -60,8 +61,7 @@
    - `{% for c in cctvs %}` `{% for s in spots %}`
  * `.html` 파일에서 폼 작성시 요소들의 `name`, `id`, `class` 속성에 띄어쓰기가 필요한 경우 중간바(`-`)를 사용합니다.
    - 예: `cctv-name` `spot-name`
- * `view.py`에서 함수와 함수 사이에는 한 칸 띄어씁니다.
-   - 예:
+ * `view.py`에서 함수와 함수 사이에는 다음과 같이 한 칸 띄어씁니다.
 ```
 def aaa(request):
     # code

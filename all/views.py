@@ -132,3 +132,19 @@ def my(request):
         'pw_success_message': pw_success_message,
     }
     return render(request, 'all/my.html', data)
+
+def manage(request):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    users = Manager.objects.filter(charge=False)
+    data = {
+        'userinfo':userinfo,
+        'uesrs': users,
+    }
+    return render(request, 'all/manage.html', data)

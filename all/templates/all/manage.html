@@ -19,7 +19,7 @@
                 <td>{{ u.user.username }}</td>
                 <td>{{ u.name }}</td>
                 <td>{{ u.cell }}</td>
-                <td><a href="/manage/edit/{{ u.user.pk }}">수정</a>&nbsp;&nbsp;&nbsp;<a href="/manage/remove/{{ u.user.pk }}">제거</a></td>
+                <td><strong><a href="/manage/edit/{{ u.user.pk }}" style="color: green;">수정</a></strong>&nbsp;&nbsp;<strong><a href="/manage/remove/{{ u.user.pk }}" style="color: red;">제거</a></strong></td>
             </tr>
             {% endfor %}
         </tbody>

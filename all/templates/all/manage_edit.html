@@ -47,6 +47,7 @@
                             <td>모델명</td>
                             <td>설치 날짜</td>
                             <td>공간</td>
+                            <td>관리</td>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,6 +56,7 @@
                             <td><a href="#">{{ c.name }}</a></td>
                             <td>{{ c.start_date }}</td>
                             <td><a href="#">{% for s in c.spots.all %}{{ s.address }} {% endfor %}</a></td>
+                            <td><strong><a href="/manage/{{ userinfo.user.pk }}/remove_cctv/{{ c.pk }}" style="color: red;">제거</a></strong></td>
                         </tr>
                         {% endfor %}
                     </tbody>

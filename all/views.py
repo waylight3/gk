@@ -161,7 +161,16 @@ def manage_edit(request, user_id):
     user = User.objects.filter(pk=user_id)
     if user.count() != 1:
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.get(user=user[0])
+    user = user[0]
+    if request.method == 'POST':
+        pw = request.POST['user-pw']
+        name = request.POST['user-name']
+        cell = request.POST['user-cell']
+        user.name = name
+        user.cell = cell
+        user.set_password(pw)
+        user.save()
+    userinfo = Manager.objects.get(user=user)
     cctvs =  Cctv.objects.filter(manager=userinfo)
     data = {
         'userinfo': userinfo,

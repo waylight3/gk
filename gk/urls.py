@@ -28,5 +28,6 @@ urlpatterns = [
     url(r'^my$', views.my),
     url(r'^manage$', views.manage),
     url(r'^manage/edit/(?P<user_id>\d+)$', views.manage_edit),
+    url(r'^manage/remove/(?P<user_id>\d+)$', views.manage_remove),
     url(r'^$', views.index)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

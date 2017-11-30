@@ -142,7 +142,7 @@ def manage(request):
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    users = Manager.objects.all()
+    users = Manager.objects.filter(charge=False)
     data = {
         'userinfo': userinfo,
         'users': users,
@@ -158,13 +158,29 @@ def manage_edit(request, user_id):
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(pk=user_id)
-    if userinfo.count() != 1:
+    user = User.objects.filter(pk=user_id)
+    if user.count() != 1:
         return HttpResponseRedirect('/')
-    userinfo = userinfo[0]
+    userinfo = Manager.objects.get(user=user[0])
     cctvs =  Cctv.objects.filter(manager=userinfo)
     data = {
         'userinfo': userinfo,
         'cctvs': cctvs,
     }
     return render(request, 'all/manage_edit.html', data)
+
+def manage_remove(request, user_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    user = User.objects.filter(pk=user_id)
+    if user.count() != 1:
+        return HttpResponseRedirect('/')
+    user = user[0]
+    user.delete()
+    return HttpResponseRedirect('/manage')

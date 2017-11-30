@@ -10,7 +10,7 @@
                 <th>아이디</th>
                 <th>이름</th>
                 <th>연락처</th>
-                <th>수정</th>
+                <th>관리</th>
             </tr>
         </thead>
         <tbody>
@@ -19,7 +19,7 @@
                 <td>{{ u.user.username }}</td>
                 <td>{{ u.name }}</td>
                 <td>{{ u.cell }}</td>
-                <td><a href="/manage/edit/{{ u.user.pk }}">수정</a></td>
+                <td><a href="/manage/edit/{{ u.user.pk }}">수정</a>&nbsp;&nbsp;&nbsp;<a href="/manage/remove/{{ u.user.pk }}">제거</a></td>
             </tr>
             {% endfor %}
         </tbody>

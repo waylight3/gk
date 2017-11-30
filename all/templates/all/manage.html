@@ -1,0 +1,28 @@
+{% extends "all/base.html" %}
+
+{% block title %}관리 :: 고래카레{% endblock title %}
+
+{% block content %}
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>아이디</th>
+                <th>이름</th>
+                <th>연락처</th>
+                <th>관리</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.user.username }}</td>
+                <td>{{ u.name }}</td>
+                <td>{{ u.cell }}</td>
+                <td><strong><a href="/manage/edit/{{ u.user.pk }}" style="color: green;">수정</a></strong>&nbsp;&nbsp;<strong><a href="/manage/remove/{{ u.user.pk }}" style="color: red;">제거</a></strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

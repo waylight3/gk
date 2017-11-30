@@ -3,7 +3,7 @@
 {% block title %}Title{% endblock title %}
 
 {% block content %}
-<table>
+<table border = "2" style = "width:100%">
     <tr>
         <th>모델명</th>
         <th>설치날짜</th>
@@ -12,7 +12,7 @@
     </tr>
     {% for c in cctv %}
     <tr>
-        <td>{{c.name}}</td>
+        <td><a href="cctv_specific/{{c.pk}}">{{c.name}}</a></td>
         <td>{{c.start_date}}</td>
         <td>{{c.manager.name}}</td>
         <td>{{c.spots}}</td>

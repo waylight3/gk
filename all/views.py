@@ -87,3 +87,13 @@ def cctv(request):
         'cctv': ret,
     }
     return render(request, 'all/cctv.html', data)
+
+def cctv_specific(request, cctv_id):
+    ret = None
+    if Manager.objects.filter(pk=cctv_id).count() > 0:
+        ret = Cctv.objects.get(pk=cctv_id)
+    data = {
+        'cctv': ret,
+    }
+
+    return render(request, 'all/cctv_specific.html', data)

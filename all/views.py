@@ -162,15 +162,21 @@ def manage_edit(request, user_id):
     if user.count() != 1:
         return HttpResponseRedirect('/')
     user = user[0]
-    if request.method == 'POST':
-        pw = request.POST['user-pw']
-        name = request.POST['user-name']
-        cell = request.POST['user-cell']
-        user.name = name
-        user.cell = cell
-        user.set_password(pw)
-        user.save()
     userinfo = Manager.objects.get(user=user)
+    if request.method == 'POST':
+        if request.POST['form-type'] == 'edit-info':
+            pw = request.POST['user-pw']
+            name = request.POST['user-name']
+            cell = request.POST['user-cell']
+            user.name = name
+            user.cell = cell
+            user.set_password(pw)
+            user.save()
+        elif request.POST['form-type'] == 'add-cctv':
+            cctv_id = request.POST['cctv-id']
+            cctv = Cctv.objects.get(pk=cctv_id)
+            cctv.manager = userinfo
+            cctv.save()
     cctvs =  Cctv.objects.filter(manager=userinfo)
     data = {
         'userinfo': userinfo,
@@ -178,7 +184,7 @@ def manage_edit(request, user_id):
     }
     return render(request, 'all/manage_edit.html', data)
 
-def manage_remove(request, user_id):
+def manage_remove_user(request, user_id):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
     userinfo = Manager.objects.filter(user=request.user)
@@ -193,3 +199,38 @@ def manage_remove(request, user_id):
     user = user[0]
     user.delete()
     return HttpResponseRedirect('/manage')
+
+def manage_remove_cctv(request, user_id, cctv_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    user = User.objects.filter(pk=user_id)
+    if user.count() != 1:
+        return HttpResponseRedirect('/')
+    user = user[0]
+    cctv = Cctv.objects.filter(pk=cctv_id)
+    if cctv.count() != 1:
+        return HttpResponseRedirect('/')
+    cctv = cctv[0]
+    cctv.manager = None
+    cctv.save()
+    return HttpResponseRedirect('/manage/edit/%s' % user_id)
+
+def api(request, query):
+    q = query.split('/')
+    print(q)
+    if q[0] == 'cctv_list':
+        if request.GET['user_id'] != '-1':
+            user = User.objects.get(pk=request.GET['user_id'])
+            manager = Manager.objects.get(user=user)
+            cctvs = Cctv.objects.filter(manager=manager)
+        else:
+            cctvs = Cctv.objects.all()
+        names = [{'id':c.pk, 'name':c.name, 'start_date':str(c.start_date), 'spots':' '.join([s.address for s in c.spots.all()]) } for c in cctvs]
+        jsondata = json.dumps(names)
+        return HttpResponse(jsondata, content_type='application/json')

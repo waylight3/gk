@@ -15,7 +15,7 @@ from all.models import *
 
 def index(request):
     data = {
-        'name':'ㅎㅇㅎㅇ',
+        'name': 'ㅎㅇㅎㅇ',
     }
     return render(request, 'all/index.html', data)
 
@@ -40,8 +40,8 @@ def login(request):
             login_fail_message = '아이디나 비밀번호가 올바르지 않습니다.'
 
     data = {
-        'login_fail':login_fail,
-        'login_fail_message':login_fail_message,
+        'login_fail': login_fail,
+        'login_fail_message': login_fail_message,
     }
 
     return render(request, 'all/login.html', data)
@@ -49,7 +49,6 @@ def login(request):
 def logout(request):
     auth_logout(request)
     return HttpResponseRedirect('/')
-
 
 def spot(request):
     ret = Spot.objects.all()
@@ -63,7 +62,7 @@ def spot(request):
         else:
             ret = None
     data = {
-        'spot' : ret,
+        'spot': ret,
     }
     return render(request, 'all/spot.html', data)
 
@@ -88,6 +87,7 @@ def cctv(request):
     }
     return render(request, 'all/cctv.html', data)
 
+
 def cctv_specific(request, cctv_id):
     ret = None
     if Manager.objects.filter(pk=cctv_id).count() > 0:
@@ -97,3 +97,151 @@ def cctv_specific(request, cctv_id):
     }
 
     return render(request, 'all/cctv_specific.html', data)
+
+def my(request):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    pw_fail = None
+    pw_fail_message = None
+    pw_success = None
+    pw_success_message = None
+    if request.method == 'POST':
+        if request.POST['form-type'] == 'edit-pw':
+            pw = request.POST['user-pw']
+            pw1 = request.POST['user-pw1']
+            pw2 = request.POST['user-pw2']
+            user = authenticate(username=userinfo.user.username, password=pw)
+            if user:
+                if pw1 == pw2:
+                    user.set_password(pw1)
+                    user.save()
+                    auth_login(request, user)
+                    pw_success = True
+                    pw_success_message = '비밀번호를 변경하였습니다.'
+                else:
+                    pw_fail = True
+                    pw_fail_message = '재입력한 비밀번호가 새 비밀번호와 다릅니다.'
+            else:
+                pw_fail = True
+                pw_fail_message = '현재 비밀번호가 올바르지 않습니다.'
+        elif request.POST['form-type'] == 'edit-info':
+            name = request.POST['user-name']
+            cell = request.POST['user-cell']
+            userinfo = Manager.objects.get(user=request.user)
+            userinfo.name = name
+            userinfo.cell = cell
+            userinfo.save()
+    data = {
+        'userinfo': userinfo,
+        'pw_fail': pw_fail,
+        'pw_fail_message': pw_fail_message,
+        'pw_success': pw_success,
+        'pw_success_message': pw_success_message,
+    }
+    return render(request, 'all/my.html', data)
+
+def manage(request):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    users = Manager.objects.filter(charge=False)
+    data = {
+        'userinfo': userinfo,
+        'users': users,
+    }
+    return render(request, 'all/manage.html', data)
+
+def manage_edit(request, user_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    user = User.objects.filter(pk=user_id)
+    if user.count() != 1:
+        return HttpResponseRedirect('/')
+    user = user[0]
+    userinfo = Manager.objects.get(user=user)
+    if request.method == 'POST':
+        if request.POST['form-type'] == 'edit-info':
+            pw = request.POST['user-pw']
+            name = request.POST['user-name']
+            cell = request.POST['user-cell']
+            user.name = name
+            user.cell = cell
+            user.set_password(pw)
+            user.save()
+        elif request.POST['form-type'] == 'add-cctv':
+            cctv_id = request.POST['cctv-id']
+            cctv = Cctv.objects.get(pk=cctv_id)
+            cctv.manager = userinfo
+            cctv.save()
+    cctvs =  Cctv.objects.filter(manager=userinfo)
+    data = {
+        'userinfo': userinfo,
+        'cctvs': cctvs,
+    }
+    return render(request, 'all/manage_edit.html', data)
+
+def manage_remove_user(request, user_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    user = User.objects.filter(pk=user_id)
+    if user.count() != 1:
+        return HttpResponseRedirect('/')
+    user = user[0]
+    user.delete()
+    return HttpResponseRedirect('/manage')
+
+def manage_remove_cctv(request, user_id, cctv_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    user = User.objects.filter(pk=user_id)
+    if user.count() != 1:
+        return HttpResponseRedirect('/')
+    user = user[0]
+    cctv = Cctv.objects.filter(pk=cctv_id)
+    if cctv.count() != 1:
+        return HttpResponseRedirect('/')
+    cctv = cctv[0]
+    cctv.manager = None
+    cctv.save()
+    return HttpResponseRedirect('/manage/edit/%s' % user_id)
+
+def api(request, query):
+    q = query.split('/')
+    print(q)
+    if q[0] == 'cctv_list':
+        if request.GET['user_id'] != '-1':
+            user = User.objects.get(pk=request.GET['user_id'])
+            manager = Manager.objects.get(user=user)
+            cctvs = Cctv.objects.filter(manager=manager)
+        else:
+            cctvs = Cctv.objects.all()
+        names = [{'id':c.pk, 'name':c.name, 'start_date':str(c.start_date), 'spots':' '.join([s.address for s in c.spots.all()]) } for c in cctvs]
+        jsondata = json.dumps(names)
+        return HttpResponse(jsondata, content_type='application/json')

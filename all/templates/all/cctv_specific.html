@@ -27,51 +27,48 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="control-label col-sm-2">공간</label>
-                <div class="col-sm-8">
-                    <input type="text" class="form-control no-radius" name="user-cell" id="user-cell" value="{{ cctv.spots }}" required>
-                </div>
-            </div>
-            <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-8">
                     <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 저장하기</button>
                 </div>
             </div>
         </form>
-<!--
+
         <div class="headline"><h4>공간</h4></div>
-        <form role="form" method="post" class="form-horizontal" id="form-cctv">{% csrf_token %}
-            <input type="hidden" name="form-type" value="add-cctv">
-            <input type="hidden" name="cctv-id" id="cctv-id" value="-1">
+        <form role="form" method="post" class="form-horizontal" id="form-spot">{% csrf_token %}
+            <input type="hidden" name="form-type" value="add-spot">
+            <input type="hidden" name="spot-id" id="spot-id" value="-1">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th style="width:20%;">모델명</th>
-                            <th style="width:30%;">설치 날짜</th>
-                            <th style="width:30%;">공간</th>
+                            <th style="width:20%;">내부주소</th>
+                            <th style="width:20%;">층</th>
+                            <th style="width:20%;">건물이름</th>
+                            <th>주소</th>
                             <th style="width:20%;">관리</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for c in cctvs %}
+                    {% for s in cctv.spots.all %}
                         <tr>
-                            <td><a href="#">{{ c.name }}</a></td>
-                            <td>{{ c.start_date|date:"Y-m-d H:i:s" }}</td>
-                            <td><a href="#">{% for s in c.spots.all %}{{ s.address }} {% endfor %}</a></td>
-                            <td><strong><a href="/manage/{{ userinfo.user.pk }}/remove_cctv/{{ c.pk }}" style="color: red;">제거</a></strong></td>
+                            <td>{{ s.indoor_loc }}</td>
+                            <td>{{ s.floor_no }}</td>
+                            <td>{{ s.dep_name }}</td>
+                            <td><a href="Spot_specific/{{s.pk}}">{{ s.address }}</a></td>
+                            <td><strong><a href="/manage/{{ userinfo.user.pk }}/remove_spot/{{ s.pk }}" style="color: red;">제거</a></strong></td>
                         </tr>
-                        {% endfor %}
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
             <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="cctv_table">
+                <table class="table table-bordered table-striped" id="spot_table">
                     <thead>
                         <tr>
-                            <th style="width:20%;">모델명</th>
-                            <th style="width:30%;">설치 날짜</th>
-                            <th style="width:30%;">공간</th>
+                            <th style="width:20%;">내부주소</th>
+                            <th style="width:20%;">층</th>
+                            <th style="width:20%;">건물이름</th>
+                            <th>주소</th>
                             <th style="width:20%;">선택</th>
                         </tr>
                     </thead>
@@ -80,9 +77,9 @@
                 </table>
             </div>
             <div class="form-group">
-                <label class="control-label col-sm-1">모델명</label>
+                <label class="control-label col-sm-1">주소</label>
                 <div class="col-sm-11">
-                    <input type="text" class="form-control no-radius" name="cctv-name" id="cctv-name" value="" required>
+                    <input type="text" class="form-control no-radius" name="spot-address" id="spot-address" value="" required>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 추가하기</button>
@@ -122,41 +119,41 @@
 {% endblock content %}
 {% block javascript %}
 <script type="text/javascript">
-var $table = $('#cctv_table tbody');
-var cctvs = [];
-$.ajax('/api/cctv_list?user_id=-1').done(function(res) {
+var $table = $('#spot_table tbody');
+var spot = [];
+$.ajax('/api/spot_list?user_id=-1').done(function(res) {
     res.forEach(function(e) {
-        e.term = e.name.replace(' ','');
+        e.term = e.address.replace(' ','');
     });
-    cctvs = res;
+    spot = res;
 });
 var update_result = function(term) {
     $table.children('tr').remove();
     var cnt = 0;
-    cctvs.forEach(function(e) {
+    spot.forEach(function(e) {
         if (e.term.indexOf(term) >= 0) {
-            $table.append('<tr data-cctv-id="'+e.id+'"><th style="font-weight:normal;">'+e.name+'</th><td>'+e.start_date+'</td><td>'+e.spots+'</td><td><a href="#" class="cctv-select" style="color: green;"><strong>선택</strong></a></td></tr>');
+            $table.append('<tr data-spot-id="'+e.id+'"><th style="font-weight:normal;">'+e.indoor_loc+'</th><td>'+e.floor_no+'</td><td>'+e.dep_name+'</td><td>'+e.address+'</td><td><a href="#" class="spot-select" style="color: green;"><strong>선택</strong></a></td></tr>');
         }
     });
 };
-$table.on('click', 'a.cctv-select', function(e) {
+$table.on('click', 'a.spot-select', function(e) {
     e.preventDefault();
-    $('#cctv-id').val($(this).parent().parent().attr('data-cctv-id'));
-    $('#cctv-name').val($(this).parent().parent().children('th').text());
+    $('#spot-id').val($(this).parent().parent().attr('data-spot-id'));
+    $('#spot-address').val($(this).parent().parent().children('th').next().next().next().text());
 });
-$('#cctv-name').keyup(function() {
-    if (cctvs.length > 0 && $('#cctv-name').val().length) {
+$('#spot-address').keyup(function() {
+    if (spot.length > 0 && $('#spot-address').val().length) {
         update_result($(this).val());
     }
 });
-$('#cctv-name').keypress(function(e) {
+$('#spot-address').keypress(function(e) {
     if (e.keyCode == 13) {
         e.preventDefault();
     }
 });
-$('#form-cctv').submit(function(e) {
-    var cctv_id = parseInt($('#cctv-id').val());
-    if (cctv_id == -1) e.preventDefault();
+$('#form-spot').submit(function(e) {
+    var spot_id = parseInt($('#spot-id').val());
+    if (spot_id == -1) e.preventDefault();
 });
 </script>
 {% endblock javascript %}

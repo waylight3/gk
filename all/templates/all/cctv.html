@@ -15,7 +15,7 @@
         <td><a href="cctv_specific/{{c.pk}}">{{c.name}}</a></td>
         <td>{{c.start_date}}</td>
         <td>{{c.manager.name}}</td>
-        <td>{{c.spots}}</td>
+        <td>{% for s in c.spots.all %} {{ s.address }} {% endfor %}</td>
     </tr>
     {% endfor %}
 </table>

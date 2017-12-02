@@ -89,11 +89,34 @@ def cctv(request):
 
 
 def cctv_specific(request, cctv_id):
-    ret = None
+    cctv = None
+    cctv_spot = None
     if Manager.objects.filter(pk=cctv_id).count() > 0:
-        ret = Cctv.objects.get(pk=cctv_id)
+        cctv = Cctv.objects.get(pk=cctv_id)
+    spot = Spot.objects.all()
+    if request.method == 'POST':
+        if request.POST['form-type'] == 'edit-info':
+            pw = request.POST['user-pw']
+            name = request.POST['user-name']
+            manager_id = request.POST['manager-id']
+            #cctv.name = name
+            #cctv.cell = cell
+            cctv.manager = Manager.objects.get(pk=manager_id)
+            cctv.save()
+        elif request.POST['form-type'] == 'add-spot':
+            spot_id = request.POST['spot-id']
+            spot = Spot.objects.get(pk=spot_id)
+            exist_flag = False
+            for s in cctv.spots.all():
+                if s == spot:
+                    exist_flag = True
+                    break
+            if exist_flag == False:
+                cctv.spots.add(spot)
+                cctv.save()
     data = {
-        'cctv': ret,
+        'cctv': cctv,
+        'spot': spot,
     }
 
     return render(request, 'all/cctv_specific.html', data)
@@ -243,5 +266,10 @@ def api(request, query):
         else:
             cctvs = Cctv.objects.all()
         names = [{'id':c.pk, 'name':c.name, 'start_date':str(c.start_date), 'spots':' '.join([s.address for s in c.spots.all()]) } for c in cctvs]
+        jsondata = json.dumps(names)
+        return HttpResponse(jsondata, content_type='application/json')
+    elif q[0] == 'spot_list':
+        spot = Spot.objects.all()
+        names = [{'id':s.pk, 'indoor_loc':s.indoor_loc, 'floor_no':s.floor_no, 'dep_name':s.dep_name, 'address':s.address} for s in spot]
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')

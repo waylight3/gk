@@ -110,6 +110,7 @@ def cctv_specific(request, cctv_id):
             for s in cctv.spots.all():
                 if s == spot:
                     exist_flag = True
+                    #print("already exist")
                     break
             if exist_flag == False:
                 cctv.spots.add(spot)
@@ -120,6 +121,21 @@ def cctv_specific(request, cctv_id):
     }
 
     return render(request, 'all/cctv_specific.html', data)
+
+def cctv_remove_spot(request, cctv_id, spot_id):
+    cctv = Cctv.objects.filter(pk=cctv_id)
+    if cctv.count() != 1:
+        return HttpResponseRedirect('/')
+    cctv = cctv[0]
+    #cctv.spots.through.objects.filter(pk=spot_id).delete()
+    spot = Spot.objects.filter(pk=spot_id)
+    if spot.count() != 1:
+        return HttpResponseRedirect('/')
+    for s in cctv.spots.all():
+        if s == spot[0]:
+            cctv.spots.remove(s)
+    cctv.save()
+    return HttpResponseRedirect('/cctv_specific/%s' % cctv_id)
 
 def my(request):
     if not request.user.is_authenticated():

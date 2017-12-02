@@ -1,0 +1,159 @@
+{% extends "all/base.html" %}
+
+{% block title %}내 정보 :: 고래카레{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+        <div class="headline"><h4>관리자 정보</h4></div>
+        <form role="form" method="post" class="form-horizontal">{% csrf_token %}
+            <input type="hidden" name="form-type" value="edit-info">
+            <div class="form-group">
+                <label class="control-label col-sm-2">아이디</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control no-radius" name="user-id" id="user-id" value="{{ userinfo.user.username }}" disabled>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">비밀번호</label>
+                <div class="col-sm-8">
+                    <input type="password" class="form-control no-radius" name="user-pw" id="user-pw" value="" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">이름</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control no-radius" name="user-name" id="user-name" value="{{ userinfo.name }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">연락처</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control no-radius" name="user-cell" id="user-cell" value="{{ userinfo.cell }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-8">
+                    <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 저장하기</button>
+                </div>
+            </div>
+        </form>
+        <div class="headline"><h4>관리중인 CCTV</h4></div>
+        <form role="form" method="post" class="form-horizontal" id="form-cctv">{% csrf_token %}
+            <input type="hidden" name="form-type" value="add-cctv">
+            <input type="hidden" name="cctv-id" id="cctv-id" value="-1">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">모델명</th>
+                            <th style="width:30%;">설치 날짜</th>
+                            <th style="width:30%;">공간</th>
+                            <th style="width:20%;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in cctvs %}
+                        <tr>
+                            <td><a href="#">{{ c.name }}</a></td>
+                            <td>{{ c.start_date|date:"Y-m-d H:i:s" }}</td>
+                            <td><a href="#">{% for s in c.spots.all %}{{ s.address }} {% endfor %}</a></td>
+                            <td><strong><a href="/manage/{{ userinfo.user.pk }}/remove_cctv/{{ c.pk }}" style="color: red;">제거</a></strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="cctv_table">
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">모델명</th>
+                            <th style="width:30%;">설치 날짜</th>
+                            <th style="width:30%;">공간</th>
+                            <th style="width:20%;">선택</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-1">모델명</label>
+                <div class="col-sm-11">
+                    <input type="text" class="form-control no-radius" name="cctv-name" id="cctv-name" value="" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 추가하기</button>
+        </form>
+        <!--
+        <form role="form" method="post" class="form-horizontal">{% csrf_token %}
+            <input type="hidden" name="form-type" value="create-cctv">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:30%;">모델명</th>
+                            <th style="width:35%;">설치 날짜</th>
+                            <th style="width:35%;">공간</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" name="cctv-name" style="width:100%;height:40px;"></td>
+                            <td><input type="datetime-local" name="cctv-start-date" style="width:100%;height:40px;"></td>
+                            <td><input type="text" name="cctv-space" style="width:100%;height:40px;"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-12">
+                    <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 추가하기</button>
+                </div>
+            </div>
+        </form>
+        -->
+    </div>
+</div>
+{% endblock content %}
+{% block javascript %}
+<script type="text/javascript">
+var $table = $('#cctv_table tbody');
+var cctvs = [];
+$.ajax('/api/cctv_list?user_id=-1').done(function(res) {
+    res.forEach(function(e) {
+        e.term = e.name.replace(' ','');
+    });
+    cctvs = res;
+});
+var update_result = function(term) {
+    $table.children('tr').remove();
+    var cnt = 0;
+    cctvs.forEach(function(e) {
+        if (e.term.indexOf(term) >= 0) {
+            $table.append('<tr data-cctv-id="'+e.id+'"><th style="font-weight:normal;">'+e.name+'</th><td>'+e.start_date+'</td><td>'+e.spots+'</td><td><a href="#" class="cctv-select" style="color: green;"><strong>선택</strong></a></td></tr>');
+        }
+    });
+};
+$table.on('click', 'a.cctv-select', function(e) {
+    e.preventDefault();
+    $('#cctv-id').val($(this).parent().parent().attr('data-cctv-id'));
+    $('#cctv-name').val($(this).parent().parent().children('th').text());
+});
+$('#cctv-name').keyup(function() {
+    if (cctvs.length > 0 && $('#cctv-name').val().length) {
+        update_result($(this).val());
+    }
+});
+$('#cctv-name').keypress(function(e) {
+    if (e.keyCode == 13) {
+        e.preventDefault();
+    }
+});
+$('#form-cctv').submit(function(e) {
+    var cctv_id = parseInt($('#cctv-id').val());
+    if (cctv_id == -1) e.preventDefault();
+});
+</script>
+{% endblock javascript %}

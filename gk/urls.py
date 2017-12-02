@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^spot$', views.spot),
     url(r'^cctv_specific/(?P<cctv_id>\d+)/remove_spot/(?P<spot_id>\d+)$', views.cctv_remove_spot),
+    url(r'^cctv_specific/(?P<cctv_id>\d+)/remove_row/(?P<row_id>\d+)$', views.cctv_remove_row),
     url(r'^cctv_specific/(?P<cctv_id>\d+)', views.cctv_specific),
     url(r'^cctv$', views.cctv),
     url(r'^login$', views.login),

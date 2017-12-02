@@ -90,9 +90,15 @@ def cctv(request):
 
 def cctv_specific(request, cctv_id):
     cctv = None
-    cctv_spot = None
+    meta = None
+    row = []
     if Manager.objects.filter(pk=cctv_id).count() > 0:
         cctv = Cctv.objects.get(pk=cctv_id)
+        if Meta.objects.filter(cctv=cctv_id).count() > 0:
+            meta = Meta.objects.filter(cctv=cctv_id)
+            for m in meta:
+                if Row.objects.filter(meta=m.pk).count() > 0:
+                    row.append(Row.objects.filter(meta=m.pk)[0])
     spot = Spot.objects.all()
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
@@ -118,6 +124,8 @@ def cctv_specific(request, cctv_id):
     data = {
         'cctv': cctv,
         'spot': spot,
+        'meta': meta,
+        'row': row,
     }
 
     return render(request, 'all/cctv_specific.html', data)
@@ -135,6 +143,20 @@ def cctv_remove_spot(request, cctv_id, spot_id):
         if s == spot[0]:
             cctv.spots.remove(s)
     cctv.save()
+    return HttpResponseRedirect('/cctv_specific/%s' % cctv_id)
+
+def cctv_remove_row(request, cctv_id, row_id):
+    cctv = Cctv.objects.filter(pk=cctv_id)
+    print("HI")
+    if cctv.count() != 1:
+        return HttpResponseRedirect('/')
+    cctv = cctv[0]
+    #cctv.spots.through.objects.filter(pk=spot_id).delete()
+    row = Row.objects.filter(pk=row_id)
+    if row.count() != 1:
+        return HttpResponseRedirect('/')
+    row.delete()
+
     return HttpResponseRedirect('/cctv_specific/%s' % cctv_id)
 
 def my(request):

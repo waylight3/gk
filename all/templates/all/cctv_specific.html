@@ -42,7 +42,7 @@
                     <thead>
                         <tr>
                             <th style="width:20%;">내부주소</th>
-                            <th style="width:20%;">층</th>
+                            <th style="width:10%;">층</th>
                             <th style="width:20%;">건물이름</th>
                             <th>주소</th>
                             <th style="width:20%;">관리</th>
@@ -66,7 +66,7 @@
                     <thead>
                         <tr>
                             <th style="width:20%;">내부주소</th>
-                            <th style="width:20%;">층</th>
+                            <th style="width:10%;">층</th>
                             <th style="width:20%;">건물이름</th>
                             <th>주소</th>
                             <th style="width:20%;">선택</th>
@@ -84,6 +84,55 @@
             </div>
             <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 추가하기</button>
         </form>
+
+        <div class="headline"><h4>동영상 및 메타로그</h4></div>
+        <form role="form" method="post" class="form-horizontal" id="form-video-meta">{% csrf_token %}
+            <input type="hidden" name="form-type" value="add-video-meta">
+            <input type="hidden" name="video-meta-id" id="video-meta-id" value="-1">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:17%;">메타로그 파일 이름</th>
+                            <th style="width:7%;">객체 이름</th>
+                            <th style="width:8%;">타임스탬프</th>
+                            <th style="width:5%;">크기</th>
+                            <th style="width:5%;">X좌표</th>
+                            <th style="width:5%;">Y좌표</th>
+                            <th style="width:5%;">속도</th>
+                            <th style="width:5%;">색깔</th>
+                            <th style="width:18%;">다운로드</th>
+                            <th style="width:10%;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for r in row %}
+                        <tr>
+                            {% for m in meta %}
+                            {% if m.pk == r.meta.pk %}
+                            <td>{{ m.name }}</td>
+                            {% endif %}
+                            {% endfor %}
+                            <td>{{ r.obj_id }}</td>
+                            <td>{{ r.time_stamp }}</td>
+                            <td>{{ r.size }}</td>
+                            <td>{{ r.xpos }}</td>
+                            <td>{{ r.ypos }}</td>
+                            <td>{{ r.speed }}</td>
+                            <td>{{ r.color }}</td>
+                            {% for m in meta %}
+                            {% if m.pk == r.meta.pk %}
+                            <td><a href="#">{{ m.video.name }}</a></td>
+                            {% endif %}
+                            {% endfor %}
+                            <td><strong><a href="/cctv_specific/{{ cctv.pk }}/remove_row/{{ r.pk }}" style="color: red;">제거</a></strong></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+
         <!--
         <form role="form" method="post" class="form-horizontal">{% csrf_token %}
             <input type="hidden" name="form-type" value="create-cctv">

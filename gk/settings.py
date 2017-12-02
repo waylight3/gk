@@ -87,6 +87,9 @@ DATABASES = {
         'PASSWORD': db_pw,
         'HOST':'',
         'PORT':'',
+        'OPTIONS': {
+            "init_command": "SET foreign_key_checks = 0;",
+        },
     }
 }
 

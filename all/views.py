@@ -92,7 +92,7 @@ def cctv_specific(request, cctv_id):
     cctv = None
     meta = None
     row = []
-    if Manager.objects.filter(pk=cctv_id).count() > 0:
+    if Cctv.objects.filter(pk=cctv_id).count() > 0:
         cctv = Cctv.objects.get(pk=cctv_id)
         if Meta.objects.filter(cctv=cctv_id).count() > 0:
             meta = Meta.objects.filter(cctv=cctv_id)

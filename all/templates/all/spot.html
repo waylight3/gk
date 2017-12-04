@@ -14,7 +14,7 @@
         </tr>
         {% for c in spot %}
         <tr>
-            <td>{{c.indoor_loc}}</td>
+            <td><a href="spot_specific/{{c.pk}}">{{c.indoor_loc}}</td>
             <td>{{c.floor_no}}</td>
             <td>{{c.dep_name}}</td>
             <td>{{c.address}}</td>

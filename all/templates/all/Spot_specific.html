@@ -11,27 +11,28 @@
             <div class="form-group">
                 <label class="control-label col-sm-2">내부주소</label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control no-radius" name="user-id" id="user-id" value="{{ cctv.name }}" disabled>
+                    <input type="text" class="form-control no-radius" name="user-id" id="user-id" value="{{ spot.indoor_loc}}({{spot.pk }})" disabled>
                 </div>
             </div>
             <div class="form-group">
                 <label class="control-label col-sm-2">층</label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control no-radius" name="user-pw" id="user-pw" value="{{ cctv.start_date }}" disabled>
+                    <input type="text" class="form-control no-radius" name="user-pw" id="user-pw" value="{{ spot.floor_no }}" disabled>
                 </div>
             </div>
             <div class="form-group">
                 <label class="control-label col-sm-2">건물이름</label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control no-radius" name="user-name" id="user-name" value="{{ cctv.manager.name }}" required>
+                    <input type="text" class="form-control no-radius" name="user-pw" id="user-pw" value="{{ spot.dep_name }}" disabled>
                 </div>
             </div>
             <div class="form-group">
                 <label class="control-label col-sm-2">주소</label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control no-radius" name="user-name" id="user-name" value="{{ cctv.manager.name }}" required>
+                    <input type="text" class="form-control no-radius" name="user-pw" id="user-pw" value="{{ spot.address }}" disabled>
                 </div>
-            </div><!--
+            </div>
+            <!--
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-8">
                     <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 저장하기</button>
@@ -56,7 +57,7 @@
                     <tbody>
                     {% for c in spot.spot_cctvs.all %}
                         <tr>
-                            <td><a href="cctv_specific/{{c.pk}}">{{ c.name }}</a></td>
+                            <td><a href="/cctv_specific/{{c.pk}}">{{ c.name }}</a></td>
                             <td>{{ c.start_date }}</td>
                             <td>{{ c.manager }}</td>
                         </tr>

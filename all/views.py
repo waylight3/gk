@@ -66,20 +66,18 @@ def spot(request):
     }
     return render(request, 'all/spot.html', data)
 
-def spot_specific(request, cctv_id):
+def spot_specific(request, spot_id):
     cctv = None
-    row = []
-    if Manager.objects.filter(pk=cctv_id).count() > 0:
-        cctv = Cctv.objects.get(pk=cctv_id)
-    spot = Spot.objects.all()
+    spot = None
+    if Spot.objects.filter(pk=spot_id).count() > 0:
+        spot = Spot.objects.get(pk=spot_id)
+    cctv = Cctv.objects.all()
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
             pw = request.POST['user-pw']
             name = request.POST['user-name']
             manager_id = request.POST['manager-id']
-            #cctv.name = name
-            #cctv.cell = cell
-            cctv.manager = Manager.objects.get(pk=manager_id)
+            spot.manager = Manager.objects.get(pk=manager_id)
             cctv.save()
         elif request.POST['form-type'] == 'add-cctv':
             cctv_id = request.POST['cctv-id']
@@ -96,8 +94,6 @@ def spot_specific(request, cctv_id):
     data = {
         'cctv': cctv,
         'spot': spot,
-        'meta': meta,
-        'row': row,
     }
 
     return render(request, 'all/spot_specific.html', data)
@@ -130,8 +126,8 @@ def cctv_specific(request, cctv_id):
     row = []
     if Manager.objects.filter(pk=cctv_id).count() > 0:
         cctv = Cctv.objects.get(pk=cctv_id)
-        if Meta.objects.filter(cctv=cctv_id).count() > 0:
-            meta = Meta.objects.filter(cctv=cctv_id)
+        if Meta.objects.filter(cctv=cctv).count() > 0:
+            meta = Meta.objects.filter(cctv=cctv)
             for m in meta:
                 if Row.objects.filter(meta=m.pk).count() > 0:
                     row.append(Row.objects.filter(meta=m.pk)[0])

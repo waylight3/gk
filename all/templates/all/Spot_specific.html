@@ -101,8 +101,8 @@ $('#spot-address').keypress(function(e) {
     }
 });
 $('#form-spot').submit(function(e) {
-    var spot_id = parseInt($('#spot-id').val());
-    if (spot_id == -1) e.preventDefault();
+    var cctv_id = parseInt($('#cctv-id').val());
+    if (cctv_id == -1) e.preventDefault();
 });
 </script>
 {% endblock javascript %}

@@ -18,7 +18,7 @@ class Spot(models.Model):
     floor_no = models.CharField(max_length=128, default='주소')
     dep_name = models.CharField(max_length=128, default='주소')
     address = models.CharField(max_length=128, default='주소')
-    cctvs = models.ManyToManyField(Cctv, blank=True, symmetrical=True, related_name='Cctv_spots')
+    cctvs = models.ManyToManyField(Cctv, blank=True, symmetrical=True, related_name='cctv_spots')
 
     def __str__(self):
         return '%s' % self.address

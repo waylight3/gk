@@ -54,7 +54,7 @@
                             <td>{{ s.indoor_loc }}</td>
                             <td>{{ s.floor_no }}</td>
                             <td>{{ s.dep_name }}</td>
-                            <td><a href="Spot_specific/{{s.pk}}">{{ s.address }}</a></td>
+                            <td><a href="spot_specific/{{s.pk}}">{{ s.address }}</a></td>
                             <td><strong><a href="/cctv_specific/{{ cctv.pk }}/remove_spot/{{ s.pk }}" style="color: red;">제거</a></strong></td>
                         </tr>
                     {% endfor %}

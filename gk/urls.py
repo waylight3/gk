@@ -28,6 +28,8 @@ urlpatterns = [
     url(r'^cctv_specific/(?P<cctv_id>\d+)/remove_row/(?P<row_id>\d+)$', views.cctv_remove_row),
     url(r'^cctv_specific/(?P<cctv_id>\d+)', views.cctv_specific),
     url(r'^cctv$', views.cctv),
+    url(r'^neighbor$', views.neighbor),
+    url(r'^neighbor_specific/(?P<neighbor_id>\d+)', views.neighbor_specific),
     url(r'^login$', views.login),
     url(r'^logout$', views.logout),
     url(r'^my$', views.my),

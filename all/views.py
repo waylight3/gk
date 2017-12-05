@@ -119,7 +119,6 @@ def cctv(request):
     }
     return render(request, 'all/cctv.html', data)
 
-
 def cctv_specific(request, cctv_id):
     cctv = None
     meta = None
@@ -190,6 +189,48 @@ def cctv_remove_row(request, cctv_id, row_id):
     row.delete()
 
     return HttpResponseRedirect('/cctv_specific/%s' % cctv_id)
+
+def neighbor(request):
+    ret = Neighbor.objects.all()
+    if request.method == 'POST':
+        o = request.POST.get('option', False)
+        q = request.POST['neighbor_query']
+        n = Neighbor.objects.filter(name=q)
+        print(n)
+        if o == 'name':
+            if n.count()>0: 
+                ret = n
+            else:
+                ret = None
+        elif o == 'spot':
+            ret = []
+            for s in Spot.objects.filter(indoor_loc=q):
+                for n in Neighbor.objects.filter(spot1=s):
+                    if not n in ret:
+                        ret.append(n)
+                for n in Neighbor.objects.filter(spot2=s):
+                    if not n in ret:
+                        ret.append(n)
+    data = {
+        'neighbor': ret,
+    }
+    return render(request, 'all/neighbor.html', data)
+
+def neighbor_specific(request, neighbor_id):
+    if Neighbor.objects.filter(pk=neighbor_id).count() > 0:
+        neighbor = Neighbor.objects.get(pk=neighbor_id)
+    spot = Spot.objects.all()
+    if request.method == 'POST':
+        if request.POST['form-type'] == 'edit-info':
+            name = request.POST['neighbor-name']
+            neighbor.name = name
+            neighbor.save()
+    data = {
+        'neighbor': neighbor
+    }
+
+    return render(request, 'all/neighbor_specific.html', data)
+
 
 def my(request):
     if not request.user.is_authenticated():

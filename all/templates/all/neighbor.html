@@ -1,0 +1,29 @@
+{% extends "all/base.html" %}
+
+{% block title %}Title{% endblock title %}
+
+{% block content %}
+<table border = "2" style = "width:100%">
+    <tr>
+        <th>이름</th>
+        <th>공간1</th>
+        <th>공간2</th>
+        <th>수정</th>
+    </tr>
+    {% for n in neighbor %}
+    <tr>
+        <td>{{n.name}}</td>
+        <td><a href="spot_specific/{{n.spot1.pk}}">{{n.spot1.indoor_loc}}({{n.spot1.pk}})</a></td>
+        <td><a href="spot_specific/{{n.spot2.pk}}">{{n.spot2.indoor_loc}}({{n.spot2.pk}})</a></td>
+        <td><strong><a href="/neighbor_specific/{{n.pk}}" style="color: green;">수정</a></strong></td>
+    </tr>
+    {% endfor %}
+</table>
+<form action="" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="radio" name="option" value="name" checked> 이름
+    <input type="radio" name="option" value="spot"> 공간
+    <input type="text" name="neighbor_query">
+    <input type="submit" >
+</form>
+{% endblock content %}

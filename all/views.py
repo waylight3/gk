@@ -99,37 +99,67 @@ def spot_specific(request, spot_id):
     return render(request, 'all/spot_specific.html', data)
 
 def cctv(request):
-    ret = Cctv.objects.all()
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    auth = None
+    ret = None
+    if userinfo.charge:
+        auth = "charged"
+        ret = Cctv.objects.all()
+    else:
+        auth = "un-charged"
+        ret = Cctv.objects.filter(manager=userinfo.pk)
     if request.method == 'POST':
         o = request.POST['option']
         q = request.POST['cctv_query']
         print(o)
-        if o == 'name':
-            ret = Cctv.objects.filter(name=q)
-        elif o == 'start_date':
-            ret = Cctv.objects.filter(start_date=q)
-        elif o == 'manager':
-            if Manager.objects.filter(name=q).count() > 0:
-                m = Manager.objects.get(name=q)
-                ret = Cctv.objects.filter(manager=m)
-            else:
-                ret = None
+        if userinfo.charge:
+            if o == 'name':
+                ret = Cctv.objects.filter(name=q)
+            elif o == 'start_date':
+                ret = Cctv.objects.filter(start_date=q)
+            elif o == 'manager':
+                if Manager.objects.filter(name=q).count() > 0:
+                    m = Manager.objects.get(name=q)
+                    ret = Cctv.objects.filter(manager=m)
+                else:
+                    ret = None
+        else:
+            ret = None
     data = {
         'cctv': ret,
+        'auth': auth,
     }
     return render(request, 'all/cctv.html', data)
 
 def cctv_specific(request, cctv_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    auth = "un-charged"
+    if userinfo.charge:
+        auth = "charged"
     cctv = None
     meta = None
     row = []
     if Cctv.objects.filter(pk=cctv_id).count() > 0:
         cctv = Cctv.objects.get(pk=cctv_id)
+        if cctv.manager.pk != userinfo.pk and userinfo.charge == False:
+            return HttpResponseRedirect('/cctv')
         if Meta.objects.filter(cctv=cctv).count() > 0:
             meta = Meta.objects.filter(cctv=cctv)
             for m in meta:
                 if Row.objects.filter(meta=m.pk).count() > 0:
                     row.append(Row.objects.filter(meta=m.pk)[0])
+    else:
+        return HttpResponseRedirect('/cctv')
     spot = Spot.objects.all()
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
@@ -157,6 +187,7 @@ def cctv_specific(request, cctv_id):
         'spot': spot,
         'meta': meta,
         'row': row,
+        'auth': auth,
     }
 
     return render(request, 'all/cctv_specific.html', data)
@@ -380,7 +411,19 @@ def api(request, query):
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')
     elif q[0] == 'spot_list':
-        spot = Spot.objects.all()
-        names = [{'id':s.pk, 'indoor_loc':s.indoor_loc, 'floor_no':s.floor_no, 'dep_name':s.dep_name, 'address':s.address} for s in spot]
+        userinfo = Manager.objects.filter(user=request.user)
+        if userinfo.count() != 1:
+            return HttpResponseRedirect('/')
+        userinfo = userinfo[0]
+        names = []
+        if userinfo.charge:
+            spot = Spot.objects.all()
+            names = [{'id': s.pk, 'indoor_loc': s.indoor_loc, 'floor_no': s.floor_no, 'dep_name': s.dep_name,
+                      'address': s.address} for s in spot]
+        else:
+            for c in Cctv.objects.filter(manager=userinfo.pk):
+                spot = c.spots.all()
+                for s in spot:
+                    names.append({'id':s.pk, 'indoor_loc':s.indoor_loc, 'floor_no':s.floor_no, 'dep_name':s.dep_name, 'address':s.address})
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')

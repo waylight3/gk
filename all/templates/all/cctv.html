@@ -7,24 +7,30 @@
     <tr>
         <th>모델명</th>
         <th>설치날짜</th>
-        <th>책임자</th>
         <th>공간</th>
+        {% if auth == "charged"  %}
+        <th>책임자</th>
+        {% endif %}
     </tr>
     {% for c in cctv %}
     <tr>
         <td><a href="cctv_specific/{{c.pk}}">{{c.name}}</a></td>
         <td>{{c.start_date}}</td>
-        <td>{{c.manager.name}}</td>
         <td>{% for s in c.spots.all %} {{ s.address }} {% endfor %}</td>
+        {% if auth == "charged" %}
+        <td><a href="manage/edit/{{c.manager.pk}}">{{c.manager.name}}</a></td>
+        {% endif %}
     </tr>
     {% endfor %}
 </table>
+{% if auth == "charged"  %}
 <form action="" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="radio" name="option" value="name" checked> 모델명
     <input type="radio" name="option" value="start_date"> 설치날짜
     <input type="radio" name="option" value="manager"> 책임자
     <input type="text" name="cctv_query">
-    <input type="submit" >
+    <input type="submit" value="검색">
 </form>
+{% endif %}
 {% endblock content %}

@@ -1,0 +1,30 @@
+{% extends "all/base.html" %}
+
+{% block title %}Title{% endblock title %}
+
+{% block content %}
+<table border = "2" style = "width:100%">
+    <tr>
+        <th>아이디</th>
+        <th>시퀀스</th>
+        <th>수정</th>
+    </tr>
+    {% for s in sequence %}
+    <tr>
+        <td>{{s.pk}}</td>
+        <td>
+            {% for n in s.neighbors.all %}
+                <a href="neighbor_specific/{{n.pk}}">&lt;{{n.spot1.indoor_loc}}({{n.spot1.pk}})-{{n.spot2.indoor_loc}}({{n.spot2.pk}})&gt;</a></td>
+            {% endfor %}
+        <td><strong><a href="/sequence_specific/{{s.pk}}" style="color: green;">수정</a></strong></td>
+    </tr>
+    {% endfor %}
+</table>
+<form action="" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="radio" name="option" value="neighbor"> 이웃공간
+    <input type="radio" name="option" value="add-sequence"> 추가
+    <input type="text" name="sequence_query">
+    <input type="submit" >
+</form>
+{% endblock content %}

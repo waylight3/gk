@@ -45,6 +45,7 @@ urlpatterns = [
     url(r'^meta/remove_meta/(?P<meta_id>\d+)$', views.remove_meta),
     url(r'^download/meta/(?P<meta_id>\d+)$', views.download_meta),
     url(r'^download/video/(?P<meta_id>\d+)$', views.download_video),
+    url(r'^download/meta_avg$', views.download_meta_avg),
     url(r'^api/(?P<query>.+)$', views.api),
     url(r'^$', views.index)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

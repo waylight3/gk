@@ -384,6 +384,12 @@ def meta(request):
                 t1 = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
                 date = q.split('~')[-1]
                 t2 = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
+            total_no = 0
+            total_objs = set()
+            total_size = 0.0
+            total_xpos = 0.0
+            total_ypos = 0.0
+            total_speed = 0.0
             for c in cctvs:
                 for m in Meta.objects.filter(cctv=c):
                     time_min, time_max = None, None
@@ -403,10 +409,16 @@ def meta(request):
                         time_max = None
                         for r in Row.objects.filter(meta=m):
                             avg_size += r.size
+                            total_size += r.size
                             avg_xpos += r.xpos
+                            total_xpos += r.xpos
                             avg_ypos += r.ypos
+                            total_ypos += r.ypos
                             avg_speed += r.speed
+                            total_speed += r.speed
                             objs.add(r.obj_id)
+                            total_objs.add(r.obj_id)
+                            total_no += 1
                             if time_min == None or time_min > r.time_stamp:
                                 time_min = r.time_stamp
                             if time_max == None or time_max < r.time_stamp:
@@ -418,12 +430,27 @@ def meta(request):
                         avg_speed /= cnt
                         dtime = time_max - time_min
                         metas.append({'meta':m, 'pk':m.pk, 'name':m.name, 'cctv':m.cctv, 'video':m.video, 'avg_size':avg_size, 'avg_xpos':avg_xpos, 'avg_ypos':avg_ypos, 'avg_speed':avg_speed, 'rec_no':cnt, 'obj_no':len(objs), 'time_len':'%s:%s:%s' % (dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
+            if request.POST.get('delete', False):
+                return HttpResponseRedirect('/meta')
             data = {
                 'meta': metas,
+                'total_no': total_no,
+                'total_objs_no': len(total_objs),
+                'avg_size': total_size / total_no if total_no > 0 else 0.0,
+                'avg_xpos': total_xpos / total_no if total_no > 0 else 0.0,
+                'avg_ypos': total_ypos / total_no if total_no > 0 else 0.0,
+                'avg_speed': total_speed / total_no if total_no > 0 else 0.0,
             }
+            with open('media/meta_avg.csv', 'w') as fp:
+                fp.write(','.join(map(str, [data['total_no'], data['total_objs_no'], data['avg_size'], data['avg_xpos'], data['avg_ypos'], data['avg_speed']])))
             return render(request, 'all/meta.html', data)
 
-
+    total_no = 0
+    total_objs = set()
+    total_size = 0.0
+    total_xpos = 0.0
+    total_ypos = 0.0
+    total_speed = 0.0
     for c in cctvs:
         for m in Meta.objects.filter(cctv=c):
             if request.POST.get('delete', False):
@@ -435,10 +462,16 @@ def meta(request):
             time_max = None
             for r in Row.objects.filter(meta=m):
                 avg_size += r.size
+                total_size += r.size
                 avg_xpos += r.xpos
+                total_xpos += r.xpos
                 avg_ypos += r.ypos
+                total_ypos += r.ypos
                 avg_speed += r.speed
+                total_speed += r.speed
                 objs.add(r.obj_id)
+                total_objs.add(r.obj_id)
+                total_no += 1
                 if time_min == None or time_min > r.time_stamp:
                     time_min = r.time_stamp
                 if time_max == None or time_max < r.time_stamp:
@@ -450,9 +483,19 @@ def meta(request):
             avg_speed /= cnt
             dtime = time_max - time_min
             metas.append({'meta':m, 'pk':m.pk, 'name':m.name, 'cctv':m.cctv, 'video':m.video, 'avg_size':avg_size, 'avg_xpos':avg_xpos, 'avg_ypos':avg_ypos, 'avg_speed':avg_speed, 'rec_no':cnt, 'obj_no':len(objs), 'time_len':'%s:%s:%s' % (dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
+    if request.POST.get('delete', False):
+        return HttpResponseRedirect('/meta')
     data = {
         'meta': metas,
+        'total_no': total_no,
+        'total_objs_no': len(total_objs),
+        'avg_size': total_size / total_no if total_no > 0 else 0.0,
+        'avg_xpos': total_xpos / total_no if total_no > 0 else 0.0,
+        'avg_ypos': total_ypos / total_no if total_no > 0 else 0.0,
+        'avg_speed': total_speed / total_no if total_no > 0 else 0.0,
     }
+    with open('media/meta_avg.csv', 'w') as fp:
+        fp.write(','.join(map(str, [data['total_no'], data['total_objs_no'], data['avg_size'], data['avg_xpos'], data['avg_ypos'], data['avg_speed']])))
     return render(request, 'all/meta.html', data)
 
 def meta_specific(request, meta_id):
@@ -846,6 +889,14 @@ def download_meta(request, meta_id):
     response = HttpResponse(data, content_type='text/csv')
     response['Content-Disposition'] = "attachment; filename*=UTF-8\'\'{0}".format(meta.name)
     response['Content-Length'] = len(data.encode())
+    return response
+
+def download_meta_avg(request):
+    with open('media/meta_avg.csv', 'rb') as fp:
+        data = fp.read()
+    response = HttpResponse(data, content_type=mimetypes.guess_type('media/meta_avg.csv')[0])
+    response['Content-Disposition'] = "attachment; filename*=UTF-8\'\'{0}".format('media/meta_avg.csv')
+    response['Content-Length'] = os.path.getsize('media/meta_avg.csv')
     return response
 
 def download_video(request, meta_id):

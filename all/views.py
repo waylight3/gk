@@ -134,21 +134,31 @@ def cctv(request):
         auth = "un-charged"
         ret = Cctv.objects.filter(manager=userinfo.pk)
     if request.method == 'POST':
-        o = request.POST['option']
-        q = request.POST['cctv_query']
-        if userinfo.charge:
-            if o == 'name':
-                ret = Cctv.objects.filter(name=q)
-            elif o == 'start_date':
-                ret = Cctv.objects.filter(start_date=q)
-            elif o == 'manager':
-                if Manager.objects.filter(name=q).count() > 0:
-                    m = Manager.objects.get(name=q)
-                    ret = Cctv.objects.filter(manager=m)
-                else:
-                    ret = None
+        if request.POST.get('option', False) == False:
+            date = request.POST['cctv-date']
+            Cctv.objects.create(name=request.POST['cctv-name'], start_date=datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
+                              int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),
+                              int(date.split('T')[1].split(':')[1]), 0, 0), manager=Manager.objects.get(pk=request.POST['manager-id']))
         else:
-            ret = None
+            o = request.POST['option']
+            q = request.POST['cctv_query']
+            if userinfo.charge:
+                if o == 'name':
+                    ret = Cctv.objects.filter(name=q)
+                elif o == 'start_date':
+                    date = q
+                    d = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
+                                      int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),
+                                      int(date.split('T')[1].split(':')[1]), 0, 0)
+                    ret = Cctv.objects.filter(start_date=d)
+                elif o == 'manager':
+                    if Manager.objects.filter(name=q).count() > 0:
+                        m = Manager.objects.get(name=q)
+                        ret = Cctv.objects.filter(manager=m)
+                    else:
+                        ret = None
+            else:
+                ret = None
     data = {
         'cctv': ret,
         'auth': auth,

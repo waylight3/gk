@@ -728,14 +728,34 @@ def manage(request):
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    if request.method == 'POST':
-        user_id = request.POST['user-id']
-        user_pw = request.POST['user-pw']
-        name = request.POST['user-name']
-        cell = request.POST['user-cell']
-        user = User.objects.create(username=user_id, email='test@test.com', password=user_pw)
-        Manager.objects.create(user=user, name=name, cell=cell)
     users = Manager.objects.filter(charge=False)
+    if request.method == 'POST':
+        if request.POST['form-type'] == 'add-user':
+            user_id = request.POST['user-id']
+            user_pw = request.POST['user-pw']
+            name = request.POST['user-name']
+            cell = request.POST['user-cell']
+            user = User.objects.create(username=user_id, email='test@test.com', password=user_pw)
+            Manager.objects.create(user=user, name=name, cell=cell)
+            users = Manager.objects.filter(charge=False)
+        elif request.POST['form-type'] == 'search':
+            o = request.POST.get('option', False)
+            q = request.POST.get('query', False)
+            print(q)
+            if o == 'id':
+                users = users.filter(user__username=q)
+            elif o == 'name':
+                users = users.filter(name=q)
+            elif o == 'cell':
+                users = users.filter(cell=q)
+            elif o == 'cctv':
+                cctvs = Cctv.objects.filter(name=q)
+                mm = '#'.join([c.manager.name for c in cctvs])
+                temp = []
+                for u in users:
+                    if u.name in mm:
+                        temp.append(u)
+                users = temp
     data = {
         'userinfo': userinfo,
         'users': users,

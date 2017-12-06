@@ -713,6 +713,13 @@ def manage(request):
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
+    if request.method == 'POST':
+        user_id = request.POST['user-id']
+        user_pw = request.POST['user-pw']
+        name = request.POST['user-name']
+        cell = request.POST['user-cell']
+        user = User.objects.create(username=user_id, email='test@test.com', password=user_pw)
+        Manager.objects.create(user=user, name=name, cell=cell)
     users = Manager.objects.filter(charge=False)
     data = {
         'userinfo': userinfo,

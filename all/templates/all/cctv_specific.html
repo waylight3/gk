@@ -11,19 +11,23 @@
             <div class="form-group">
                 <label class="control-label col-sm-2">이름</label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control no-radius" name="user-id" id="user-id" value="{{ cctv.name }}" disabled>
+                    <input type="text" class="form-control no-radius" name="cctv-name" id="cctv-name" value="{{ cctv.name }}" required>
                 </div>
             </div>
             <div class="form-group">
                 <label class="control-label col-sm-2">설치날짜</label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control no-radius" name="user-pw" id="user-pw" value="{{ cctv.start_date }}" disabled>
+                    <input type="datetime-local" class="form-control no-radius" name="cctv-date" id="cctv-date" value="{{ cctv.start_date.year }}-{{ cctv.start_date.month }}-{{ cctv.start_date.day }}T{{ cctv.start_date|date:'g:i' }}" required>
                 </div>
             </div>
             <div class="form-group">
                 <label class="control-label col-sm-2">책임자</label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control no-radius" name="user-name" id="user-name" value="{{ cctv.manager.name }}" required>
+                    {% if auth == "charged" %}
+                    <input type="text" class="form-control no-radius" name="cctv-manager" id="cctv-manager" value="{{ cctv.manager.name }}" required>
+                    {% else %}
+                    <input type="text" class="form-control no-radius" name="cctv-manager" id="cctv-manager" value="{{ cctv.manager.name }}" disabled>
+                    {% endif %}
                 </div>
             </div>
             <div class="form-group">

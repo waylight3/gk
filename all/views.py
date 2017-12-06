@@ -163,12 +163,12 @@ def cctv_specific(request, cctv_id):
     spot = Spot.objects.all()
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
-            pw = request.POST['user-pw']
-            name = request.POST['user-name']
-            manager_id = request.POST['manager-id']
-            #cctv.name = name
-            #cctv.cell = cell
-            cctv.manager = Manager.objects.get(pk=manager_id)
+            name = request.POST['cctv-name']
+            date = request.POST['cctv-date']
+            manager = request.POST['cctv-manager']
+            cctv.name = name
+            cctv.date = date
+            #cctv.manager = Manager.objects.get(pk=manager_id)
             cctv.save()
         elif request.POST['form-type'] == 'add-spot':
             spot_id = request.POST['spot-id']
@@ -425,5 +425,18 @@ def api(request, query):
                 spot = c.spots.all()
                 for s in spot:
                     names.append({'id':s.pk, 'indoor_loc':s.indoor_loc, 'floor_no':s.floor_no, 'dep_name':s.dep_name, 'address':s.address})
+        jsondata = json.dumps(names)
+        return HttpResponse(jsondata, content_type='application/json')
+    elif q[0] == 'manager_list':
+        userinfo = Manager.objects.filter(user=request.user)
+        if userinfo.count() != 1:
+            return HttpResponseRedirect('/')
+        userinfo = userinfo[0]
+        names = []
+        if userinfo.charge:
+            manager = Manager.objects.all()
+            names = [{'id': m.pk, 'user': m.user.username, 'name': m.name, 'cell': m.cell} for m in manager]
+        else:
+            pass
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')

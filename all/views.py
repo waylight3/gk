@@ -117,7 +117,6 @@ def cctv(request):
     if request.method == 'POST':
         o = request.POST['option']
         q = request.POST['cctv_query']
-        print(o)
         if userinfo.charge:
             if o == 'name':
                 ret = Cctv.objects.filter(name=q)
@@ -157,8 +156,8 @@ def cctv_specific(request, cctv_id):
         if Meta.objects.filter(cctv=cctv).count() > 0:
             meta = Meta.objects.filter(cctv=cctv)
             for m in meta:
-                if Row.objects.filter(meta=m.pk).count() > 0:
-                    row.append(Row.objects.filter(meta=m.pk)[0])
+                if Row.objects.filter(meta=m).count() > 0:
+                    row+=list(Row.objects.filter(meta=m))
     else:
         return HttpResponseRedirect('/cctv')
     spot = Spot.objects.all()
@@ -168,7 +167,6 @@ def cctv_specific(request, cctv_id):
             date = request.POST['cctv-date']
             manager_id = request.POST['manager-id']
             cctv.name = name
-            print(cctv.start_date, date)
             cctv.start_date = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
                                                 int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),
                                                 int(date.split('T')[1].split(':')[1]), 0, 0)
@@ -212,19 +210,38 @@ def cctv_remove_spot(request, cctv_id, spot_id):
     cctv.save()
     return HttpResponseRedirect('/cctv_specific/%s' % cctv_id)
 
-def cctv_remove_row(request, cctv_id, row_id):
+def cctv_remove_meta(request, cctv_id, meta_id):
     cctv = Cctv.objects.filter(pk=cctv_id)
-    print("HI")
     if cctv.count() != 1:
         return HttpResponseRedirect('/')
     cctv = cctv[0]
     #cctv.spots.through.objects.filter(pk=spot_id).delete()
-    row = Row.objects.filter(pk=row_id)
-    if row.count() != 1:
+    meta = Meta.objects.filter(pk=meta_id)
+    if meta.count() != 1:
         return HttpResponseRedirect('/')
-    row.delete()
+    meta[0].delete()
 
     return HttpResponseRedirect('/cctv_specific/%s' % cctv_id)
+
+def meta(request):
+    metas = Meta.objects.all()
+    row = []
+    for m in metas:
+        if Row.objects.filter(meta=m.pk).count() > 0:
+            row.append(Row.objects.filter(meta=m.pk)[0])
+    data = {
+        'meta': metas,
+        'row': row,
+    }
+    return render(request, 'all/meta.html', data)
+
+def remove_meta(request, meta_id):
+    meta = Meta.objects.filter(pk=meta_id)
+    if meta.count() != 1:
+        return HttpResponseRedirect('/')
+    meta[0].delete()
+
+    return HttpResponseRedirect('/meta')
 
 def neighbor(request):
     ret = Neighbor.objects.all()

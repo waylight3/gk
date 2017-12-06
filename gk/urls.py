@@ -25,8 +25,8 @@ urlpatterns = [
     url(r'^spot_specific/(?P<spot_id>\d+)', views.spot_specific),
     url(r'^cctv_specific/(?P<cctv_id>\d+)/remove_spot/(?P<spot_id>\d+)$', views.cctv_remove_spot),
     url(r'^cctv_specific/(?P<cctv_id>\d+)/remove_spot/(?P<spot_id>\d+)$', views.cctv_remove_spot),
-    url(r'^cctv_specific/(?P<cctv_id>\d+)/remove_row/(?P<row_id>\d+)$', views.cctv_remove_row),
-    url(r'^cctv_specific/(?P<cctv_id>\d+)', views.cctv_specific),
+    url(r'^cctv_specific/(?P<cctv_id>\d+)/remove_meta/(?P<meta_id>\d+)$', views.cctv_remove_meta),
+    url(r'^cctv_specific/(?P<cctv_id>\d+)$', views.cctv_specific),
     url(r'^cctv$', views.cctv),
     url(r'^neighbor$', views.neighbor),
     url(r'^neighbor_specific/(?P<neighbor_id>\d+)', views.neighbor_specific),
@@ -40,6 +40,8 @@ urlpatterns = [
     url(r'^manage/edit/(?P<user_id>\d+)$', views.manage_edit),
     url(r'^manage/remove/(?P<user_id>\d+)$', views.manage_remove_user),
     url(r'^manage/(?P<user_id>\d+)/remove_cctv/(?P<cctv_id>\d+)$', views.manage_remove_cctv),
+    url(r'^meta$', views.meta),
+    url(r'^meta/remove_meta/(?P<meta_id>\d+)$', views.remove_meta),
     url(r'^api/(?P<query>.+)$', views.api),
     url(r'^$', views.index)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

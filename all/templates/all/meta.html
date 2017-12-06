@@ -1,0 +1,85 @@
+{% extends "all/base.html" %}
+
+{% block title %}Meta 및 영상 정보 :: 고래카레{% endblock title %}
+
+{% block content %}
+        <div class="headline"><h4>동영상 및 메타로그</h4></div>
+        <form role="form" method="post" class="form-horizontal" id="form-video-meta">{% csrf_token %}
+            <input type="hidden" name="form-type" value="add-video-meta">
+            <input type="hidden" name="video-meta-id" id="video-meta-id" value="-1">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:17%;">메타로그 파일 이름</th>
+                            <th style="width:7%;">객체 이름</th>
+                            <th style="width:8%;">타임스탬프</th>
+                            <th style="width:5%;">크기</th>
+                            <th style="width:5%;">X좌표</th>
+                            <th style="width:5%;">Y좌표</th>
+                            <th style="width:5%;">속도</th>
+                            <th style="width:5%;">색깔</th>
+                            <th style="width:18%;">다운로드</th>
+                            <th style="width:10%;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for m in meta %}
+                        <tr>
+                            <td>{{ m.name }}</td>
+                            <td>{{ r.obj_id }}</td>
+                            <td>{{ r.time_stamp }}</td>
+                            <td>{{ r.size }}</td>
+                            <td>{{ r.xpos }}</td>
+                            <td>{{ r.ypos }}</td>
+                            <td>{{ r.speed }}</td>
+                            <td>{{ r.color }}</td>
+                            <td><a href="#">{{ m.video.name }}</a></td>
+                            <td><strong><a href="/meta/remove_meta/{{ m.pk }}" style="color: red;">제거</a></strong></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+{% endblock content %}
+{% block javascript %}
+<script type="text/javascript">
+var $table = $('#spot_table tbody');
+var spot = [];
+$.ajax('/api/spot_list?user_id=-1').done(function(res) {
+    res.forEach(function(e) {
+        e.term = e.address.replace(' ','');
+    });
+    spot = res;
+});
+var update_result = function(term) {
+    $table.children('tr').remove();
+    var cnt = 0;
+    spot.forEach(function(e) {
+        if (e.term.indexOf(term) >= 0) {
+            $table.append('<tr data-spot-id="'+e.id+'"><th style="font-weight:normal;">'+e.indoor_loc+'</th><td>'+e.floor_no+'</td><td>'+e.dep_name+'</td><td>'+e.address+'</td><td><a href="#" class="spot-select" style="color: green;"><strong>선택</strong></a></td></tr>');
+        }
+    });
+};
+$table.on('click', 'a.spot-select', function(e) {
+    e.preventDefault();
+    $('#spot-id').val($(this).parent().parent().attr('data-spot-id'));
+    $('#spot-address').val($(this).parent().parent().children('th').next().next().next().text());
+});
+$('#spot-address').keyup(function() {
+    if (spot.length > 0 && $('#spot-address').val().length) {
+        update_result($(this).val());
+    }
+});
+$('#spot-address').keypress(function(e) {
+    if (e.keyCode == 13) {
+        e.preventDefault();
+    }
+});
+$('#form-spot').submit(function(e) {
+    var spot_id = parseInt($('#spot-id').val());
+    if (spot_id == -1) e.preventDefault();
+});
+</script>
+{% endblock javascript %}

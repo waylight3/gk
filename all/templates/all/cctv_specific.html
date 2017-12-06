@@ -127,13 +127,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% for r in row %}
+                    {% for m in meta %}
                         <tr>
-                            {% for m in meta %}
-                            {% if m.pk == r.meta.pk %}
                             <td>{{ m.name }}</td>
-                            {% endif %}
-                            {% endfor %}
                             <td>{{ r.obj_id }}</td>
                             <td>{{ r.time_stamp }}</td>
                             <td>{{ r.size }}</td>
@@ -141,12 +137,8 @@
                             <td>{{ r.ypos }}</td>
                             <td>{{ r.speed }}</td>
                             <td>{{ r.color }}</td>
-                            {% for m in meta %}
-                            {% if m.pk == r.meta.pk %}
                             <td><a href="#">{{ m.video.name }}</a></td>
-                            {% endif %}
-                            {% endfor %}
-                            <td><strong><a href="/cctv_specific/{{ cctv.pk }}/remove_row/{{ r.pk }}" style="color: red;">제거</a></strong></td>
+                            <td><strong><a href="/cctv_specific/{{ cctv.pk }}/remove_meta/{{ m.pk }}" style="color: red;">제거</a></strong></td>
                         </tr>
                     {% endfor %}
                     </tbody>

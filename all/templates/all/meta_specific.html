@@ -1,0 +1,39 @@
+{% extends "all/base.html" %}
+
+{% block title %}Meta 및 영상 정보 :: 고래카레{% endblock title %}
+
+{% block content %}
+        <div class="headline"><h4>{{meta.name}}</h4></div>
+        <form role="form" method="post" class="form-horizontal" id="form-video-meta">{% csrf_token %}
+            <input type="hidden" name="form-type" value="add-video-meta">
+            <input type="hidden" name="video-meta-id" id="video-meta-id" value="-1">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:7%;">객체 이름</th>
+                            <th style="width:8%;">타임스탬프</th>
+                            <th style="width:5%;">크기</th>
+                            <th style="width:5%;">X좌표</th>
+                            <th style="width:5%;">Y좌표</th>
+                            <th style="width:5%;">속도</th>
+                            <th style="width:5%;">색깔</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for r in row %}
+                        <tr>
+                            <td>{{ r.obj_id }}</td>
+                            <td>{{ r.time_stamp }}</td>
+                            <td>{{ r.size }}</td>
+                            <td>{{ r.xpos }}</td>
+                            <td>{{ r.ypos }}</td>
+                            <td>{{ r.speed }}</td>
+                            <td>{{ r.color }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+{% endblock content %}

@@ -40,6 +40,7 @@ urlpatterns = [
     url(r'^manage/edit/(?P<user_id>\d+)$', views.manage_edit),
     url(r'^manage/remove/(?P<user_id>\d+)$', views.manage_remove_user),
     url(r'^manage/(?P<user_id>\d+)/remove_cctv/(?P<cctv_id>\d+)$', views.manage_remove_cctv),
+    url(r'^meta_specific/(?P<meta_id>\d+)$', views.meta_specific),
     url(r'^meta$', views.meta),
     url(r'^meta/remove_meta/(?P<meta_id>\d+)$', views.remove_meta),
     url(r'^api/(?P<query>.+)$', views.api),

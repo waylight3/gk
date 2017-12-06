@@ -224,7 +224,16 @@ def cctv_remove_meta(request, cctv_id, meta_id):
     return HttpResponseRedirect('/cctv_specific/%s' % cctv_id)
 
 def meta(request):
-    metas = Meta.objects.all()
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    metas = []
+    cctvs = Cctv.objects.filter(manager=userinfo)
+    for c in cctvs:
+        metas += list(Meta.objects.filter(cctv=c))
     row = []
     for m in metas:
         if Row.objects.filter(meta=m.pk).count() > 0:
@@ -234,6 +243,26 @@ def meta(request):
         'row': row,
     }
     return render(request, 'all/meta.html', data)
+
+def meta_specific(request, meta_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if Meta.objects.filter(pk=meta_id).count() > 0:
+        meta = Meta.objects.get(pk=meta_id)
+    if userinfo.charge == False and meta.cctv.manager != userinfo:
+        return HttpResponseRedirect('/')
+    row = []
+    if Row.objects.filter(meta=meta).count() > 0:
+        row+=list(Row.objects.filter(meta=meta))
+    data = {
+        'meta': meta,
+        'row': row,
+    }
+    return render(request, 'all/meta_specific.html', data)
 
 def remove_meta(request, meta_id):
     meta = Meta.objects.filter(pk=meta_id)

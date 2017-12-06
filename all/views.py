@@ -146,20 +146,35 @@ def cctv_specific(request, cctv_id):
     auth = "un-charged"
     if userinfo.charge:
         auth = "charged"
-    cctv = None
-    meta = None
-    row = []
-    if Cctv.objects.filter(pk=cctv_id).count() > 0:
-        cctv = Cctv.objects.get(pk=cctv_id)
-        if cctv.manager.pk != userinfo.pk and userinfo.charge == False:
-            return HttpResponseRedirect('/cctv')
-        if Meta.objects.filter(cctv=cctv).count() > 0:
-            meta = Meta.objects.filter(cctv=cctv)
-            for m in meta:
-                if Row.objects.filter(meta=m).count() > 0:
-                    row+=list(Row.objects.filter(meta=m))
-    else:
+    cctv = Cctv.objects.filter(pk=cctv_id)
+    if cctv.count() != 1:
         return HttpResponseRedirect('/cctv')
+    cctv = cctv[0]
+    if cctv.manager.pk != userinfo.pk and userinfo.charge == False:
+        return HttpResponseRedirect('/cctv')
+    meta_list = []
+    for m in Meta.objects.filter(cctv=cctv):
+        avg_size, avg_xpos, avg_ypos, avg_speed = 0, 0, 0, 0
+        objs = set()
+        time_min = None
+        time_max = None
+        for r in Row.objects.filter(meta=m):
+            avg_size += r.size
+            avg_xpos += r.xpos
+            avg_ypos += r.ypos
+            avg_speed += r.speed
+            objs.add(r.obj_id)
+            if time_min == None or time_min > r.time_stamp:
+                time_min = r.time_stamp
+            if time_max == None or time_max < r.time_stamp:
+                time_max = r.time_stamp
+        cnt = Row.objects.filter(meta=m).count()
+        avg_size /= cnt
+        avg_xpos /= cnt
+        avg_ypos /= cnt
+        avg_speed /= cnt
+        dtime = time_max - time_min
+        meta_list.append({'pk':m.pk, 'name':m.name, 'cctv':m.cctv, 'video':m.video, 'avg_size':avg_size, 'avg_xpos':avg_xpos, 'avg_ypos':avg_ypos, 'avg_speed':avg_speed, 'rec_no':cnt, 'obj_no':len(objs), 'time_len':'%s:%s:%s' % (dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
     spot = Spot.objects.all()
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
@@ -180,7 +195,6 @@ def cctv_specific(request, cctv_id):
             for s in cctv.spots.all():
                 if s == spot:
                     exist_flag = True
-                    #print("already exist")
                     break
             if exist_flag == False:
                 cctv.spots.add(spot)
@@ -188,8 +202,7 @@ def cctv_specific(request, cctv_id):
     data = {
         'cctv': cctv,
         'spot': spot,
-        'meta': meta,
-        'row': row,
+        'meta': meta_list,
         'auth': auth,
     }
 

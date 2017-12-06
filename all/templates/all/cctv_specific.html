@@ -137,7 +137,7 @@
                             <td>{{ m.avg_xpos|floatformat:2 }}</td>
                             <td>{{ m.avg_ypos|floatformat:2 }}</td>
                             <td>{{ m.avg_speed|floatformat:2 }}</td>
-                            <td><a href="/download/{{ m.pk }}">다운로드</a></td>
+                            <td><a href="/download/meta/{{ m.pk }}">메타로그</a> <a href="/download/video/{{ m.pk }}">동영상</a></td>
                             <td><strong><a href="/cctv_specific/{{ cctv.pk }}/remove_meta/{{ m.pk }}" style="color: red;">제거</a></strong></td>
                         </tr>
                     {% endfor %}
@@ -145,41 +145,65 @@
                 </table>
             </div>
         </form>
-
-        <!--
-        <form role="form" method="post" class="form-horizontal">{% csrf_token %}
-            <input type="hidden" name="form-type" value="create-cctv">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th style="width:30%;">모델명</th>
-                            <th style="width:35%;">설치 날짜</th>
-                            <th style="width:35%;">공간</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="text" name="cctv-name" style="width:100%;height:40px;"></td>
-                            <td><input type="datetime-local" name="cctv-start-date" style="width:100%;height:40px;"></td>
-                            <td><input type="text" name="cctv-space" style="width:100%;height:40px;"></td>
-                        </tr>
-                    </tbody>
-                </table>
+        <form role="form" method="post" category="file_upload" class="form-horizontal" enctype="multipart/form-data">{% csrf_token %}
+            <input type="hidden" name="form-type" value="file-upload">
+            <div class="form-group">
+                <label class="control-label col-sm-2">동영상 선택</label>
+                <div class="col-sm-8">
+                    <div class="input-group" style="width:100%;">
+                        <span class="input-group-btn" style="width:1%">
+                            <span class="btn btn-primary btn-file">
+                                파일 선택 <input type="file" name="new-video" id="new-video" required>
+                            </span>
+                        </span>
+                        <input type="text" class="form-control" readonly>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
-                <div class="col-sm-12">
-                    <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 추가하기</button>
+                <label class="control-label col-sm-2">메타로그 선택</label>
+                <div class="col-sm-8">
+                    <div class="input-group" style="width:100%;">
+                        <span class="input-group-btn" style="width:1%">
+                            <span class="btn btn-primary btn-file">
+                                파일 선택 <input type="file" name="new-meta" id="new-meta" required>
+                            </span>
+                        </span>
+                        <input type="text" class="form-control" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-8">
+                    <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-cloud-upload fa-fw"></i> 업로드</button>
                 </div>
             </div>
         </form>
-        -->
-<!--
     </div>
 </div>
--->
 {% endblock content %}
 {% block javascript %}
+<script type="text/javascript">
+    $(document).on('change', '.btn-file :file',
+    function() {
+        var input = $(this),
+            numFiles = input.get(0).files ? input.get(0).files.length : 1,
+            label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+        input.trigger('fileselect', [numFiles, label]);
+    });
+    $(document).ready( function() {
+        $('.btn-file :file').on('fileselect', function(event, numFiles, label) {
+            var input = $(this).parents('.input-group').find(':text'),
+                log = numFiles > 1 ? numFiles + 'files selected' : label;
+            if (input.length) {
+                input.val(log);
+            } else {
+                if (log)
+                    alert(log);
+            }
+        });
+    });
+</script>
 <script type="text/javascript">
 var $table = $('#spot_table tbody');
 var spot = [];

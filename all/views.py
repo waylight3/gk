@@ -12,7 +12,10 @@ import html, difflib, json
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from all.models import *
-import datetime
+import datetime, csv, os
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import mimetypes
 
 def index(request):
     data = {
@@ -199,6 +202,20 @@ def cctv_specific(request, cctv_id):
             if exist_flag == False:
                 cctv.spots.add(spot)
                 cctv.save()
+        elif request.POST['form-type'] == 'file-upload':
+            file_video = request.FILES['new-video']
+            file_meta = request.FILES['new-meta']
+            default_storage.save('%s' % file_video.name, ContentFile(file_video.read()))
+            video = Video.objects.create(name=''.join(file_video.name.split('.')[:-1]), ext=file_video.name.split('.')[-1], cctv=cctv)
+            mmeta = Meta.objects.create(name=file_meta.name, cctv=cctv, video=video)
+            rows = file_meta.read().decode().split('\n')
+            for r in rows:
+                rs = r.split(',')
+                if len(rs) != 7: break
+                date = rs[1]
+                ts = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
+                Row.objects.create(meta=mmeta, obj_id=rs[0], time_stamp=ts, size=float(rs[2]), xpos=float(rs[3]), ypos=float(rs[4]), speed=float(rs[5]), color=rs[6])
+            return HttpResponseRedirect('/cctv_specific/%s' % cctv.pk)
     data = {
         'cctv': cctv,
         'spot': spot,
@@ -245,15 +262,33 @@ def meta(request):
     userinfo = userinfo[0]
     metas = []
     cctvs = Cctv.objects.filter(manager=userinfo)
+    if userinfo.charge:
+        cctvs = Cctv.objects.all()
     for c in cctvs:
-        metas += list(Meta.objects.filter(cctv=c))
-    row = []
-    for m in metas:
-        if Row.objects.filter(meta=m.pk).count() > 0:
-            row.append(Row.objects.filter(meta=m.pk)[0])
+        for m in Meta.objects.filter(cctv=c):
+            avg_size, avg_xpos, avg_ypos, avg_speed = 0, 0, 0, 0
+            objs = set()
+            time_min = None
+            time_max = None
+            for r in Row.objects.filter(meta=m):
+                avg_size += r.size
+                avg_xpos += r.xpos
+                avg_ypos += r.ypos
+                avg_speed += r.speed
+                objs.add(r.obj_id)
+                if time_min == None or time_min > r.time_stamp:
+                    time_min = r.time_stamp
+                if time_max == None or time_max < r.time_stamp:
+                    time_max = r.time_stamp
+            cnt = Row.objects.filter(meta=m).count()
+            avg_size /= cnt
+            avg_xpos /= cnt
+            avg_ypos /= cnt
+            avg_speed /= cnt
+            dtime = time_max - time_min
+            metas.append({'meta':m, 'pk':m.pk, 'name':m.name, 'cctv':m.cctv, 'video':m.video, 'avg_size':avg_size, 'avg_xpos':avg_xpos, 'avg_ypos':avg_ypos, 'avg_speed':avg_speed, 'rec_no':cnt, 'obj_no':len(objs), 'time_len':'%s:%s:%s' % (dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
     data = {
         'meta': metas,
-        'row': row,
     }
     return render(request, 'all/meta.html', data)
 
@@ -580,6 +615,33 @@ def manage_remove_cctv(request, user_id, cctv_id):
     cctv.manager = None
     cctv.save()
     return HttpResponseRedirect('/manage/edit/%s' % user_id)
+
+def download_meta(request, meta_id):
+    meta = Meta.objects.filter(pk=meta_id)
+    if meta.count() != 1:
+        return HttpResponseRedirect('/')
+    meta = meta[0]
+    data = []
+    for r in Row.objects.filter(meta=meta):
+        data.append(','.join([r.obj_id, str(r.time_stamp), str(r.size), str(r.xpos), str(r.ypos), str(r.speed), r.color]))
+    data = '\n'.join(data)
+    response = HttpResponse(data, content_type='text/csv')
+    response['Content-Disposition'] = "attachment; filename*=UTF-8\'\'{0}".format(meta.name)
+    response['Content-Length'] = len(data.encode())
+    return response
+
+def download_video(request, meta_id):
+    meta = Meta.objects.filter(pk=meta_id)
+    if meta.count() != 1:
+        return HttpResponseRedirect('/')
+    meta = meta[0]
+    video = meta.video
+    with open('media/%s.%s' % (video.name, video.ext), 'rb') as fp:
+        data = fp.read()
+    response = HttpResponse(data, content_type=mimetypes.guess_type('media/%s.%s' % (video.name, video.ext))[0])
+    response['Content-Disposition'] = "attachment; filename*=UTF-8\'\'{0}.{1}".format(video.name, video.ext)
+    response['Content-Length'] = os.path.getsize('media/%s.%s' % (video.name, video.ext))
+    return response
 
 def api(request, query):
     q = query.split('/')

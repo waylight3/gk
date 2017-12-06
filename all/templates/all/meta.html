@@ -11,15 +11,15 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th style="width:17%;">메타로그 파일 이름</th>
-                            <th style="width:7%;">객체 이름</th>
-                            <th style="width:8%;">타임스탬프</th>
-                            <th style="width:5%;">크기</th>
-                            <th style="width:5%;">X좌표</th>
-                            <th style="width:5%;">Y좌표</th>
-                            <th style="width:5%;">속도</th>
-                            <th style="width:5%;">색깔</th>
-                            <th style="width:18%;">다운로드</th>
+                            <th style="width:10%;">메타로그</th>
+                            <th style="width:10%;">촬영 길이</th>
+                            <th style="width:10%;">레코드 수</th>
+                            <th style="width:10%;">객체 수</th>
+                            <th style="width:10%;">평균 크기</th>
+                            <th style="width:10%;">평균 X좌표</th>
+                            <th style="width:10%;">평균 Y좌표</th>
+                            <th style="width:10%;">평균 속도</th>
+                            <th style="width:10%;">다운로드</th>
                             <th style="width:10%;">관리</th>
                         </tr>
                     </thead>
@@ -27,14 +27,14 @@
                     {% for m in meta %}
                         <tr>
                             <td><a href="/meta_specific/{{ m.pk }}">{{ m.name }}</a></td>
-                            <td>{{ r.obj_id }}</td>
-                            <td>{{ r.time_stamp }}</td>
-                            <td>{{ r.size }}</td>
-                            <td>{{ r.xpos }}</td>
-                            <td>{{ r.ypos }}</td>
-                            <td>{{ r.speed }}</td>
-                            <td>{{ r.color }}</td>
-                            <td><a href="#">{{ m.video.name }}</a></td>
+                            <td>{{ m.time_len }}</td>
+                            <td>{{ m.rec_no }}</td>
+                            <td>{{ m.obj_no }}</td>
+                            <td>{{ m.avg_size|floatformat:2 }}</td>
+                            <td>{{ m.avg_xpos|floatformat:2 }}</td>
+                            <td>{{ m.avg_ypos|floatformat:2 }}</td>
+                            <td>{{ m.avg_speed|floatformat:2 }}</td>
+                            <td><a href="/download/meta/{{ m.pk }}">메타로그</a> <a href="/download/video/{{ m.pk }}">동영상</a></td>
                             <td><strong><a href="/meta/remove_meta/{{ m.pk }}" style="color: red;">제거</a></strong></td>
                         </tr>
                     {% endfor %}

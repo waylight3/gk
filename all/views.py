@@ -55,18 +55,34 @@ def logout(request):
     return HttpResponseRedirect('/')
 
 def spot(request):
-    ret = Spot.objects.all()
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    ret = []
+    if userinfo.charge:
+        ret = Spot.objects.all()
+        cc = Cctv.objects.all()
+    else:
+        cc = Cctv.objects.filter(manager=userinfo)
+        for i in range(len(cc)):
+            spot = list(Spot.objects.filter(spot_cctvs=(cc[i])))
+            for j in range(len(spot)):
+                if not spot[j] in ret:
+                    ret = ret + [spot[j]]
+                #print(spot[0])
     if request.method == 'POST':
-        o = request.POST.get('option', False)
+        o = request.POST['option']
         q = request.POST['spot_query']
         c = Cctv.objects.filter(name=q)
-        print(c)
-        if c.count()>0: 
-            ret = Spot.objects.filter(cctv=c)
-        else:
-            ret = None
+        print(c) 
+        ret = Spot.objects.filter(spot_cctvs=c)
+        print(ret)
     data = {
         'spot': ret,
+        'cctv': cc,
     }
     return render(request, 'all/spot.html', data)
 
@@ -443,26 +459,54 @@ def remove_meta(request, meta_id):
     return HttpResponseRedirect('/meta')
 
 def neighbor(request):
-    ret = Neighbor.objects.all()
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    ret = []
+    spotlist = []
+    if userinfo.charge:
+        ret = Neighbor.objects.all()
+    else:
+        cc = Cctv.objects.filter(manager=userinfo)
+        for i in range(len(cc)):
+            spot = list(Spot.objects.filter(spot_cctvs=(cc[i])))
+            for j in range(len(spot)):
+                if not spot[j] in spotlist:
+                    spotlist = spotlist + [spot[j]]
+            #print(spotlist)
+        for s in spotlist:
+            for l in spotlist:
+                for n in Neighbor.objects.filter(spot1=l, spot2=s):
+                    if not n in ret:
+                        #print(n)
+                        ret.append(n)   
+            #print(ret)
+    #ret = Neighbor.objects.all()
     if request.method == 'POST':
         o = request.POST.get('option', False)
         q = request.POST['neighbor_query']
         n = Neighbor.objects.filter(name=q)
-        print(n)
+        #print(n)
         if o == 'name':
             if n.count()>0: 
                 ret = n
             else:
                 ret = None
         elif o == 'spot':
-            ret = []
+            if str(Spot.objects.filter(indoor_loc=q)) == '<QuerySet []>':
+                ret = None
             for s in Spot.objects.filter(indoor_loc=q):
-                for n in Neighbor.objects.filter(spot1=s):
-                    if not n in ret:
-                        ret.append(n)
-                for n in Neighbor.objects.filter(spot2=s):
-                    if not n in ret:
-                        ret.append(n)
+                print(s)
+                for l in spotlist:
+                    for n in Neighbor.objects.filter(spot1=s, spot2=l):
+                        if not n in ret:
+                            ret.append(n)
+                    for n in Neighbor.objects.filter(spot2=l, spot1=s):
+                        if not n in ret:
+                            ret.append(n)
     data = {
         'neighbor': ret,
     }
@@ -497,17 +541,17 @@ def sequence(request):
                 num = len(temp1)-1
                 while num > 0:
                     for n1 in temp1:
-                        print(temp2[0])
+                        #print(temp2[0])
                         if temp2[0].spot1 == n1.spot2:
                             temp2 = [n1] + temp2
                             num-=1
-                            print("front", num)
+                            #print("front", num)
                             break
                     for n1 in temp1:
                         if temp2[-1].spot2 == n1.spot1:
                             temp2 = temp2 + [n1]
                             num-=1
-                            print("after", num)
+                            #print("after", num)
                             break
                 #temp2 is a sorted list
                 s_ = ''.join('<%s-%s>' % (n.spot1.indoor_loc, n.spot2.indoor_loc) for n in temp2)

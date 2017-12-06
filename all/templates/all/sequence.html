@@ -14,8 +14,8 @@
         <td>{{s.pk}}</td>
         <td>
             {% for n in s.neighbors.all %}
-                <a href="neighbor_specific/{{n.pk}}">&lt;{{n.spot1.indoor_loc}}({{n.spot1.pk}})-{{n.spot2.indoor_loc}}({{n.spot2.pk}})&gt;</a></td>
-            {% endfor %}
+                <a href="neighbor_specific/{{n.pk}}">&lt;{{n.spot1.indoor_loc}}({{n.spot1.pk}})-{{n.spot2.indoor_loc}}({{n.spot2.pk}})&gt;</a>
+            {% endfor %}</td>
         <td><strong><a href="/sequence_specific/{{s.pk}}" style="color: green;">수정</a></strong></td>
     </tr>
     {% endfor %}

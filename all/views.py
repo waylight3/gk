@@ -267,6 +267,126 @@ def neighbor_specific(request, neighbor_id):
 
     return render(request, 'all/neighbor_specific.html', data)
 
+def sequence(request):
+    ret = Sequence.objects.all()
+    seq = Sequence.objects.all()
+    if request.method == 'POST':
+        ret = []
+        o = request.POST.get('option', False)
+        q = request.POST['sequence_query']
+        if o == 'neighbor':
+            for s in seq:
+                temp1 = list(s.neighbors.all())
+                temp2 = [temp1[0]]
+                num = len(temp1)-1
+                while num > 0:
+                    for n1 in temp1:
+                        print(temp2[0])
+                        if temp2[0].spot1 == n1.spot2:
+                            temp2 = [n1] + temp2
+                            num-=1
+                            print("front", num)
+                            break
+                    for n1 in temp1:
+                        if temp2[-1].spot2 == n1.spot1:
+                            temp2 = temp2 + [n1]
+                            num-=1
+                            print("after", num)
+                            break
+                #temp2 is a sorted list
+                s_ = ''.join('<%s-%s>' % (n.spot1.indoor_loc, n.spot2.indoor_loc)  for n in temp2)
+                q_ = ''.join(q.split(","))
+                if q_ in s_ :
+                    ret = ret + [s]
+        elif o == 'add-sequence':
+            new_seq = Sequence.objects.create()
+            new_seq.save()
+            for n in q.split(','):
+                s1 = Spot.objects.get(indoor_loc=n.split('-')[0][1:])
+                s2 = Spot.objects.get(indoor_loc=n.split('-')[-1][:-1])
+                nn = Neighbor.objects.get(spot1=s1, spot2=s2)
+                new_seq.neighbors.add(nn)
+            new_seq.save()
+    data = {
+        'sequence': ret,
+    }
+    return render(request, 'all/sequence.html', data)
+
+def sequence_specific(request, sequence_id):
+    sequence = None
+    if Sequence.objects.filter(pk=sequence_id).count() > 0:
+        sequence = Sequence.objects.get(pk=sequence_id)
+    if request.method == 'POST':
+        if request.POST['form-type'] == 'add-neighbor':
+            nid = request.POST['neighbor-id']
+            add_n = Neighbor.objects.get(pk=int(nid))
+            sequence.neighbors.add(add_n)
+            sequence.save()
+    data = {
+        'sequence': sequence,
+    }
+
+    return render(request, 'all/sequence_specific.html', data)
+
+def sequence_remove_neighbor(request, sequence_id, neighbor_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    sequence = Sequence.objects.filter(pk=sequence_id)
+    if sequence.count() != 1:
+        return HttpResponseRedirect('/')
+    sequence = sequence[0]
+    neighbor = Neighbor.objects.filter(pk=neighbor_id)
+    if neighbor.count() != 1:
+        return HttpResponseRedirect('/')
+    neighbor = neighbor[0]
+    sequence.neighbors.remove(neighbor)
+    sequence.save()
+    if sequence.neighbors.count() == 0:
+        sequence.delete()
+        return HttpResponseRedirect('/sequence')
+    return HttpResponseRedirect('/sequence_specific/%s' % sequence_id)
+
+def manage_edit(request, user_id):
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    if not userinfo.charge:
+        return HttpResponseRedirect('/')
+    user = User.objects.filter(pk=user_id)
+    if user.count() != 1:
+        return HttpResponseRedirect('/')
+    user = user[0]
+    userinfo = Manager.objects.get(user=user)
+    if request.method == 'POST':
+        if request.POST['form-type'] == 'edit-info':
+            pw = request.POST['user-pw']
+            name = request.POST['user-name']
+            cell = request.POST['user-cell']
+            user.name = name
+            user.cell = cell
+            user.set_password(pw)
+            user.save()
+        elif request.POST['form-type'] == 'add-cctv':
+            cctv_id = request.POST['cctv-id']
+            cctv = Cctv.objects.get(pk=cctv_id)
+            cctv.manager = userinfo
+            cctv.save()
+    cctvs =  Cctv.objects.filter(manager=userinfo)
+    data = {
+        'userinfo': userinfo,
+        'cctvs': cctvs,
+    }
+    return render(request, 'all/manage_edit.html', data)
+
 
 def my(request):
     if not request.user.is_authenticated():
@@ -432,6 +552,7 @@ def api(request, query):
                     names.append({'id':s.pk, 'indoor_loc':s.indoor_loc, 'floor_no':s.floor_no, 'dep_name':s.dep_name, 'address':s.address})
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')
+
     elif q[0] == 'manager_list':
         userinfo = Manager.objects.filter(user=request.user)
         if userinfo.count() != 1:
@@ -443,5 +564,17 @@ def api(request, query):
             names = [{'id': m.pk, 'user': m.user.username, 'name': m.name, 'cell': m.cell} for m in manager]
         else:
             pass
+        jsondata = json.dumps(names)
+        return HttpResponse(jsondata, content_type='application/json')
+    elif q[0] == 'neighbor_list':
+        userinfo = Manager.objects.filter(user=request.user)
+        if userinfo.count() != 1:
+            return HttpResponseRedirect('/')
+        userinfo = userinfo[0]
+        names = []
+        if not userinfo.charge:
+            return HttpResponseRedirect('/')
+        neighbor = Neighbor.objects.all()
+        names = [{'id': n.pk, 'spot1': n.spot1.indoor_loc, 'spot2': n.spot2.indoor_loc, 'name': n.name} for n in neighbor]
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')

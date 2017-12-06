@@ -555,7 +555,10 @@ def neighbor(request):
     #ret = Neighbor.objects.all()
     if request.method == 'POST':
         o = request.POST.get('option', False)
-        q = request.POST['neighbor_query']
+        q = request.POST.get('neighbor_query', False)
+        f = request.POST.get('form-type',False)
+        add = request.POST.get('neighbor-add', False)
+        name = request.POST.get('neighbor-name', False)
         n = Neighbor.objects.filter(name=q)
         #print(n)
         if o == 'name':
@@ -575,6 +578,15 @@ def neighbor(request):
                     for n in Neighbor.objects.filter(spot2=l, spot1=s):
                         if not n in ret:
                             ret.append(n)
+        if f == 'add-neighbor':
+            if userinfo.charge:
+                s1 = Spot.objects.get(indoor_loc=add.split('-')[0][1:])
+                s2 = Spot.objects.get(indoor_loc=add.split('-')[-1][:-1])
+                print(s1, s2)
+                nn = Neighbor.objects.create(spot1=s1, spot2=s2)
+                #print(nn)
+                nn.name = name
+                nn.save()
     data = {
         'neighbor': ret,
     }
@@ -596,8 +608,44 @@ def neighbor_specific(request, neighbor_id):
     return render(request, 'all/neighbor_specific.html', data)
 
 def sequence(request):
-    ret = Sequence.objects.all()
-    seq = Sequence.objects.all()
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    userinfo = Manager.objects.filter(user=request.user)
+    if userinfo.count() != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    neighbor = []
+    spotlist = []
+    cc = Cctv.objects.filter(manager=userinfo)
+    for i in range(len(cc)):
+        spot = list(Spot.objects.filter(spot_cctvs=(cc[i])))
+        for j in range(len(spot)):
+            if not spot[j] in spotlist:
+                spotlist = spotlist + [spot[j]]
+        #print(spotlist)
+    for s in spotlist:
+        for l in spotlist:
+            for n in Neighbor.objects.filter(spot1=l, spot2=s):
+                if not n in neighbor:
+                    #print(n)
+                    neighbor.append(n)
+    if userinfo.charge:
+        ret = Sequence.objects.all()
+        seq = Sequence.objects.all()
+    else:
+        sequence = []
+        for seq in Sequence.objects.all():
+            match = False
+            for nei in seq.neighbors.all():
+                for n in neighbor:
+                    if nei == n:
+                        match = True
+                        break
+                    match = False
+            if match == True:
+                sequence = sequence + [seq]
+        seq = sequence
+        ret = sequence
     if request.method == 'POST':
         ret = []
         o = request.POST.get('option', False)
@@ -627,14 +675,15 @@ def sequence(request):
                 if q_ in s_ :
                     ret = ret + [s]
         elif o == 'add-sequence':
-            new_seq = Sequence.objects.create()
-            new_seq.save()
-            for n in q.split(','):
-                s1 = Spot.objects.get(indoor_loc=n.split('-')[0][1:])
-                s2 = Spot.objects.get(indoor_loc=n.split('-')[-1][:-1])
-                nn = Neighbor.objects.get(spot1=s1, spot2=s2)
-                new_seq.neighbors.add(nn)
-            new_seq.save()
+            if userinfo.charge:
+                new_seq = Sequence.objects.create()
+                new_seq.save()
+                for n in q.split(','):
+                    s1 = Spot.objects.get(indoor_loc=n.split('-')[0][1:])
+                    s2 = Spot.objects.get(indoor_loc=n.split('-')[-1][:-1])
+                    nn = Neighbor.objects.get(spot1=s1, spot2=s2)
+                    new_seq.neighbors.add(nn)
+                new_seq.save()
     data = {
         'sequence': ret,
     }

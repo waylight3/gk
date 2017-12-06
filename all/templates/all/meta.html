@@ -38,6 +38,18 @@
                     <td><strong><a href="/meta/remove_meta/{{ m.pk }}" style="color: red;">제거</a></strong></td>
                 </tr>
             {% endfor %}
+                <tr class="info">
+                    <td><strong>평균</strong></td>
+                    <td></td>
+                    <td>{{ total_no }}</td>
+                    <td>{{ total_objs_no }}</td>
+                    <td>{{ avg_size }}</td>
+                    <td>{{ avg_xpos }}</td>
+                    <td>{{ avg_ypos }}</td>
+                    <td>{{ avg_speed }}</td>
+                    <td><a href="/download/meta_avg">다운로드</a></td>
+                    <td></td>
+                </tr>
             </tbody>
         </table>
     </div>

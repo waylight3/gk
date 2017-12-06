@@ -1,0 +1,99 @@
+{% extends "all/base.html" %}
+
+{% block title %}SEQUENCE 정보 :: 고래카레{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+        <div class="headline"><h4>SEQUENCE 정보</h4></div>
+        <form role="form" method="post" class="form-horizontal" id="form-neighbor">{% csrf_token %}
+            <input type="hidden" name="form-type" value="add-neighbor">
+            <input type="hidden" name="neighbor-id" id="neighbor-id" value="-1">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">공간1</th>
+                            <th style="width:10%;">이름</th>
+                            <th style="width:20%;">공간2</th>
+                            <th style="width:20%;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for n in sequence.neighbors.all %}
+                        <tr>
+                            <td><a href="/spot_specific/{{n.spot1.pk}}">{{ n.spot1.indoor_loc }}</a></td>
+                            <td><a href="/neighbor_specific/{{n.pk}}">{{ n.name }}</a></td>
+                            <td><a href="/spot_specific/{{n.spot2.pk}}">{{ n.spot2.indoor_loc }}</a></td>
+                            <td><strong><a href="/sequence_specific/{{ sequence.pk }}/remove_neighbor/{{ n.pk }}" style="color: red;">제거</a></strong></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="neighbor_table">
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">공간1</th>
+                            <th style="width:10%;">이름</th>
+                            <th style="width:20%;">공간2</th>
+                            <th style="width:20%;">선택</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-1"></label>
+                <div class="col-sm-11">
+                    <input type="text" class="form-control no-radius" name="neighbor-name" id="neighbor-name" value="" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 추가하기</button>
+        </form>
+{% endblock content %}
+{% block javascript %}
+<script type="text/javascript">
+var $table = $('#neighbor_table tbody');
+var neighbor = [];
+$.ajax('/api/neighbor_list?user_id=-1').done(function(res) {
+    res.forEach(function(e) {
+        e.term = e.spot1.replace(' ','') + e.spot2.replace(' ', '');
+    });
+    neighbor = res;
+});
+var update_result = function(term) {
+    $table.children('tr').remove();
+    var cnt = 0;
+    neighbor.forEach(function(e) {
+        if (e.term.indexOf(term) >= 0) {
+            $table.append('<tr data-neighbor-id="'+e.id+'"><th style="font-weight:normal;">'+e.spot1+'</th><td>'+e.name+'</td><td>'+e.spot2+'</td><td><a href="#" class="neighbor-select" style="color: green;"><strong>선택</strong></a></td></tr>');
+        }
+    });
+};
+$table.on('click', 'a.neighbor-select', function(e) {
+    e.preventDefault();
+    $('#neighbor-id').val($(this).parent().parent().attr('data-neighbor-id'));
+    var s1 = $(this).parent().parent().children('th').text().trim();
+    var nn = $(this).parent().parent().children('th').next().text().trim();
+    var s2 = $(this).parent().parent().children('th').next().next().text().trim();
+    $('#neighbor-name').val('<'+s1+'-'+nn+'-'+s2+'>');
+});
+$('#neighbor-name').keyup(function() {
+    if (neighbor.length > 0 && $('#neighbor-name').val().length > 0) {
+        update_result($(this).val());
+    }
+});
+$('#neighbor-name').keypress(function(e) {
+    if (e.keyCode == 13) {
+        e.preventDefault();
+    }
+});
+$('#form-neighbor').submit(function(e) {
+    var cctv_id = parseInt($('#neighbor-id').val());
+    if (cctv_id == -1) e.preventDefault();
+});
+</script>
+{% endblock javascript %}

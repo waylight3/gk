@@ -134,7 +134,22 @@ def cctv(request):
         auth = "un-charged"
         ret = Cctv.objects.filter(manager=userinfo.pk)
     if request.method == 'POST':
-        if request.POST.get('option', False) == False:
+        if request.POST.get('form-type', False) == 'file-upload':
+            file_meta = request.FILES['new-cctvs']
+            rows = file_meta.read().decode().split('\n')
+            for r in rows:
+                rs = r.split(',')
+                if len(rs) != 3: break
+                name = rs[0]
+                date = rs[1]
+                manager = Manager.objects.filter(pk=rs[2])
+                if manager.count() != 1:
+                    return HttpResponseRedirect('/cctv')
+                manager = manager[0]
+                ts = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
+                Cctv.objects.create(name=name, start_date=ts, manager=manager)
+            return HttpResponseRedirect('/cctv')
+        elif request.POST.get('option', False) == False:
             date = request.POST['cctv-date']
             Cctv.objects.create(name=request.POST['cctv-name'], start_date=datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
                               int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),

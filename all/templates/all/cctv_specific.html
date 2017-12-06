@@ -129,7 +129,7 @@
                     <tbody>
                     {% for m in meta %}
                         <tr>
-                            <td>{{ m.name }}</td>
+                            <td><a href="/meta_specific/{{ m.pk }}">{{ m.name }}</a></td>
                             <td>{{ m.time_len }}</td>
                             <td>{{ m.rec_no }}</td>
                             <td>{{ m.obj_no }}</td>

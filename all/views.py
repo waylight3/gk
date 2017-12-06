@@ -12,6 +12,7 @@ import html, difflib, json
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from all.models import *
+import datetime
 
 def index(request):
     data = {
@@ -165,10 +166,14 @@ def cctv_specific(request, cctv_id):
         if request.POST['form-type'] == 'edit-info':
             name = request.POST['cctv-name']
             date = request.POST['cctv-date']
-            manager = request.POST['cctv-manager']
+            manager_id = request.POST['manager-id']
             cctv.name = name
-            cctv.date = date
-            #cctv.manager = Manager.objects.get(pk=manager_id)
+            print(cctv.start_date, date)
+            cctv.start_date = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
+                                                int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),
+                                                int(date.split('T')[1].split(':')[1]), 0, 0)
+            if Manager.objects.filter(pk=manager_id).count() == 1:
+                cctv.manager = Manager.objects.get(pk=manager_id)
             cctv.save()
         elif request.POST['form-type'] == 'add-spot':
             spot_id = request.POST['spot-id']

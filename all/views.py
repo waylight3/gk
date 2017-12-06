@@ -264,8 +264,130 @@ def meta(request):
     cctvs = Cctv.objects.filter(manager=userinfo)
     if userinfo.charge:
         cctvs = Cctv.objects.all()
+    if request.method == 'POST':
+        o = request.POST['option']
+        q = request.POST['meta-query']
+        if o == 'cctv-name':
+            cctvs = cctvs.filter(name=q)
+        elif o == 'spot':
+            temp = []
+            for c in cctvs:
+                for s in c.spots.all():
+                    if s.indoor_loc == q:
+                        temp.append(c)
+                        break
+            cctvs = temp
+        elif o == 'sequence':
+            cctvs = []
+            q = ''.join(q.split(","))
+            tmp = []
+            for ss in Sequence.objects.all():
+                temp1 = list(ss.neighbors.all())
+                temp2 = [temp1[0]]
+                num = len(temp1)-1
+                while num > 0:
+                    for n1 in temp1:
+                        if temp2[0].spot1 == n1.spot2:
+                            temp2 = [n1] + temp2
+                            num-=1
+                            break
+                    for n1 in temp1:
+                        if temp2[-1].spot2 == n1.spot1:
+                            temp2 = temp2 + [n1]
+                            num-=1
+                            break
+                temp = ''.join('<%s-%s>' % (n.spot1.indoor_loc, n.spot2.indoor_loc) for n in temp2)
+                if temp != q:
+                    continue
+                total_good = True
+                for n in ss.neighbors.all():
+                    good = False
+                    for c in n.spot1.spot_cctvs.all():
+                        if c.manager == userinfo:
+                            good = True
+                            break
+                    if not good:
+                        total_good = False
+                        break
+                    good = False
+                    for c in n.spot2.spot_cctvs.all():
+                        if c.manager == userinfo:
+                            good = True
+                            break
+                    if not good:
+                        total_good = False
+                        break
+                if not total_good:
+                    break
+                for n in ss.neighbors.all():
+                    for c in n.spot1.spot_cctvs.all():
+                        if c in cctvs: continue
+                        cctvs.append(c)
+                    for c in n.spot2.spot_cctvs.all():
+                        if c in cctvs: continue
+                        cctvs.append(c)
+        elif o == 'time':
+            t1 = None
+            t2 = None
+            metas = []
+            if q[0] == '~':
+                date = q[1:]
+                t1 = datetime.datetime(1, 1, 1, 0, 0)
+                t2 = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
+            elif q[-1] == '~':
+                date = q[:-1]
+                t1 = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
+                t2 = datetime.datetime(9999, 12, 31, 0, 0)
+            else:
+                date = q.split('~')[0]
+                t1 = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
+                date = q.split('~')[-1]
+                t2 = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
+            for c in cctvs:
+                for m in Meta.objects.filter(cctv=c):
+                    time_min, time_max = None, None
+                    for r in Row.objects.filter(meta=m):
+                        if time_min == None or time_min > r.time_stamp:
+                            time_min = r.time_stamp
+                        if time_max == None or time_max < r.time_stamp:
+                            time_max = r.time_stamp
+                    print(c, time_min, time_max)
+                    if t1 <= time_min and time_max <= t2:
+                        if request.POST.get('delete', False):
+                            m.delete()
+                            continue
+                        avg_size, avg_xpos, avg_ypos, avg_speed = 0, 0, 0, 0
+                        objs = set()
+                        time_min = None
+                        time_max = None
+                        for r in Row.objects.filter(meta=m):
+                            avg_size += r.size
+                            avg_xpos += r.xpos
+                            avg_ypos += r.ypos
+                            avg_speed += r.speed
+                            objs.add(r.obj_id)
+                            if time_min == None or time_min > r.time_stamp:
+                                time_min = r.time_stamp
+                            if time_max == None or time_max < r.time_stamp:
+                                time_max = r.time_stamp
+                        cnt = Row.objects.filter(meta=m).count()
+                        avg_size /= cnt
+                        avg_xpos /= cnt
+                        avg_ypos /= cnt
+                        avg_speed /= cnt
+                        dtime = time_max - time_min
+                        metas.append({'meta':m, 'pk':m.pk, 'name':m.name, 'cctv':m.cctv, 'video':m.video, 'avg_size':avg_size, 'avg_xpos':avg_xpos, 'avg_ypos':avg_ypos, 'avg_speed':avg_speed, 'rec_no':cnt, 'obj_no':len(objs), 'time_len':'%s:%s:%s' % (dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
+            data = {
+                'meta': metas,
+            }
+            return render(request, 'all/meta.html', data)
+
+
     for c in cctvs:
         for m in Meta.objects.filter(cctv=c):
+            if request.POST.get('delete', False):
+                m.delete()
+                continue
             avg_size, avg_xpos, avg_ypos, avg_speed = 0, 0, 0, 0
             objs = set()
             time_min = None
@@ -388,7 +510,7 @@ def sequence(request):
                             print("after", num)
                             break
                 #temp2 is a sorted list
-                s_ = ''.join('<%s-%s>' % (n.spot1.indoor_loc, n.spot2.indoor_loc)  for n in temp2)
+                s_ = ''.join('<%s-%s>' % (n.spot1.indoor_loc, n.spot2.indoor_loc) for n in temp2)
                 q_ = ''.join(q.split(","))
                 if q_ in s_ :
                     ret = ret + [s]

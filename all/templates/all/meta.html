@@ -3,45 +3,55 @@
 {% block title %}Meta 및 영상 정보 :: 고래카레{% endblock title %}
 
 {% block content %}
-        <div class="headline"><h4>동영상 및 메타로그</h4></div>
-        <form role="form" method="post" class="form-horizontal" id="form-video-meta">{% csrf_token %}
-            <input type="hidden" name="form-type" value="add-video-meta">
-            <input type="hidden" name="video-meta-id" id="video-meta-id" value="-1">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th style="width:10%;">메타로그</th>
-                            <th style="width:10%;">촬영 길이</th>
-                            <th style="width:10%;">레코드 수</th>
-                            <th style="width:10%;">객체 수</th>
-                            <th style="width:10%;">평균 크기</th>
-                            <th style="width:10%;">평균 X좌표</th>
-                            <th style="width:10%;">평균 Y좌표</th>
-                            <th style="width:10%;">평균 속도</th>
-                            <th style="width:10%;">다운로드</th>
-                            <th style="width:10%;">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for m in meta %}
-                        <tr>
-                            <td><a href="/meta_specific/{{ m.pk }}">{{ m.name }}</a></td>
-                            <td>{{ m.time_len }}</td>
-                            <td>{{ m.rec_no }}</td>
-                            <td>{{ m.obj_no }}</td>
-                            <td>{{ m.avg_size|floatformat:2 }}</td>
-                            <td>{{ m.avg_xpos|floatformat:2 }}</td>
-                            <td>{{ m.avg_ypos|floatformat:2 }}</td>
-                            <td>{{ m.avg_speed|floatformat:2 }}</td>
-                            <td><a href="/download/meta/{{ m.pk }}">메타로그</a> <a href="/download/video/{{ m.pk }}">동영상</a></td>
-                            <td><strong><a href="/meta/remove_meta/{{ m.pk }}" style="color: red;">제거</a></strong></td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </form>
+<div class="headline"><h4>동영상 및 메타로그</h4></div>
+<form role="form" method="post" class="form-horizontal" id="form-video-meta">{% csrf_token %}
+    <input type="hidden" name="form-type" value="add-video-meta">
+    <input type="hidden" name="video-meta-id" id="video-meta-id" value="-1">
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th style="width:10%;">메타로그</th>
+                    <th style="width:10%;">촬영 길이</th>
+                    <th style="width:10%;">레코드 수</th>
+                    <th style="width:10%;">객체 수</th>
+                    <th style="width:10%;">평균 크기</th>
+                    <th style="width:10%;">평균 X좌표</th>
+                    <th style="width:10%;">평균 Y좌표</th>
+                    <th style="width:10%;">평균 속도</th>
+                    <th style="width:10%;">다운로드</th>
+                    <th style="width:10%;">관리</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for m in meta %}
+                <tr>
+                    <td><a href="/meta_specific/{{ m.pk }}">{{ m.name }}</a></td>
+                    <td>{{ m.time_len }}</td>
+                    <td>{{ m.rec_no }}</td>
+                    <td>{{ m.obj_no }}</td>
+                    <td>{{ m.avg_size|floatformat:2 }}</td>
+                    <td>{{ m.avg_xpos|floatformat:2 }}</td>
+                    <td>{{ m.avg_ypos|floatformat:2 }}</td>
+                    <td>{{ m.avg_speed|floatformat:2 }}</td>
+                    <td><a href="/download/meta/{{ m.pk }}">메타로그</a> <a href="/download/video/{{ m.pk }}">동영상</a></td>
+                    <td><strong><a href="/meta/remove_meta/{{ m.pk }}" style="color: red;">제거</a></strong></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
+<form action="" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="checkbox" name="delete" value="delete"> 결과 삭제
+    <input type="radio" name="option" value="cctv-name" checked> CCTV 이름
+    <input type="radio" name="option" value="spot"> 촬영 공간
+    <input type="radio" name="option" value="sequence"> 시퀀스
+    <input type="radio" name="option" value="time"> 시간대
+    <input type="text" name="meta-query">
+    <input type="submit" value="검색">
+</form>
 {% endblock content %}
 {% block javascript %}
 <script type="text/javascript">

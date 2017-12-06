@@ -12,15 +12,19 @@
             <th>address</th>
             <th>cctv</th>
         </tr>
-        {% for c in spot %}
+        {% for s in spot %}
         <tr>
-            <td><a href="spot_specific/{{c.pk}}">{{c.indoor_loc}}({{c.pk}})</td>
-            <td>{{c.floor_no}}</td>
-            <td>{{c.dep_name}}</td>
-            <td>{{c.address}}</td>
+            <td><a href="spot_specific/{{s.pk}}">{{s.indoor_loc}}({{s.pk}})</td>
+            <td>{{s.floor_no}}</td>
+            <td>{{s.dep_name}}</td>
+            <td>{{s.address}}</td>
             <td>
-                {% for s in c.spot_cctvs.all %}
-                {{s.name}}
+                {% for c in s.spot_cctvs.all %}
+                    {% for cc in cctv %}
+                        {% if c == cc %}
+                            {{c.name}}
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
                 </td>
                 

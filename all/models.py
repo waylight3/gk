@@ -51,7 +51,7 @@ class Row(models.Model):
     meta = models.ForeignKey(Meta, blank=True, null=True, default=None, related_name='meta_rows')
     obj_id = models.CharField(max_length=128, default='개체 번호')
     time_stamp = models.DateTimeField(default=datetime.now)
-    size = models.CharField(max_length=128, default='개체 크기')
+    size = models.FloatField(default=0.0)
     xpos = models.FloatField(default=0.0)
     ypos = models.FloatField(default=0.0)
     speed = models.FloatField(default=0.0)

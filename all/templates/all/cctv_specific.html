@@ -62,20 +62,20 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th style="width:20%;">내부주소</th>
-                            <th style="width:10%;">층</th>
-                            <th style="width:20%;">건물이름</th>
-                            <th>주소</th>
-                            <th style="width:20%;">관리</th>
+                            <th style="width:22%;">내부주소</th>
+                            <th style="width:22%;">층</th>
+                            <th style="width:22%;">건물이름</th>
+                            <th style="width:22%;">주소</th>
+                            <th style="width:12%;">관리</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for s in cctv.spots.all %}
                         <tr>
-                            <td>{{ s.indoor_loc }}</td>
+                            <td><a href="/spot_specific/{{s.pk}}">{{ s.indoor_loc }}</a></td>
                             <td>{{ s.floor_no }}</td>
                             <td>{{ s.dep_name }}</td>
-                            <td><a href="/spot_specific/{{s.pk}}">{{ s.indoor_loc }}({{ s.pk }})</a></td>
+                            <td>{{ s.address }}</td>
                             <td><strong><a href="/cctv_specific/{{ cctv.pk }}/remove_spot/{{ s.pk }}" style="color: red;">제거</a></strong></td>
                         </tr>
                     {% endfor %}
@@ -86,11 +86,11 @@
                 <table class="table table-bordered table-striped" id="spot_table">
                     <thead>
                         <tr>
-                            <th style="width:20%;">내부주소</th>
-                            <th style="width:10%;">층</th>
-                            <th style="width:20%;">건물이름</th>
-                            <th>주소</th>
-                            <th style="width:20%;">선택</th>
+                            <th style="width:22%;">내부주소</th>
+                            <th style="width:22%;">층</th>
+                            <th style="width:22%;">건물이름</th>
+                            <th style="width:22%;">주소</th>
+                            <th style="width:12%;">선택</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,7 +98,7 @@
                 </table>
             </div>
             <div class="form-group">
-                <label class="control-label col-sm-1">주소</label>
+                <label class="control-label col-sm-1">내부주소</label>
                 <div class="col-sm-11">
                     <input type="text" class="form-control no-radius" name="spot-address" id="spot-address" value="" required>
                 </div>
@@ -209,7 +209,7 @@ var $table = $('#spot_table tbody');
 var spot = [];
 $.ajax('/api/spot_list?user_id=-1').done(function(res) {
     res.forEach(function(e) {
-        e.term = e.address.replace(' ','');
+        e.term = e.indoor_loc.replace(' ','');
     });
     spot = res;
 });
@@ -225,7 +225,7 @@ var update_result = function(term) {
 $table.on('click', 'a.spot-select', function(e) {
     e.preventDefault();
     $('#spot-id').val($(this).parent().parent().attr('data-spot-id'));
-    $('#spot-address').val($(this).parent().parent().children('th').next().next().next().text());
+    $('#spot-address').val($(this).parent().parent().children('th').text());
 });
 $('#spot-address').keyup(function() {
     if (spot.length > 0 && $('#spot-address').val().length) {

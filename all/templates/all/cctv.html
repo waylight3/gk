@@ -23,7 +23,7 @@
                 <td>{{ c.start_date|date:"Y-m-d H:i:s" }}</td>
                 <td>{% for s in c.spots.all %}<a href="/spot_specific/{{ s.pk }}">{{ s.indoor_loc }}({{ s.pk }})</a> {% endfor %}</td>
                 {% if auth == "charged" %}
-                <td><a href="manage/edit/{{c.manager.pk}}">{{ c.manager.name }}</a></td>
+                <td><a href="manage/edit/{{c.manager.user.pk}}">{{ c.manager.name }}</a></td>
                 {% endif %}
             </tr>
             {% endfor %}

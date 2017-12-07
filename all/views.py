@@ -121,18 +121,24 @@ def spot_specific(request, spot_id):
 def cctv(request):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    #userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT * FROM `all_manager` WHERE `all_manager`. `user_id` = " + str(request.user.pk))
+    #print(userinfo_raw[0].charge)
+    #if userinfo.count() != 1:
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     auth = None
     ret = None
     if userinfo.charge:
         auth = "charged"
-        ret = Cctv.objects.all()
+        #ret = Cctv.objects.all()
+        ret = Cctv.objects.raw("SELECT * FROM `all_cctv`")
     else:
         auth = "un-charged"
-        ret = Cctv.objects.filter(manager=userinfo.pk)
+        #ret = Cctv.objects.filter(manager=userinfo.pk)
+        ret = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = "+str(userinfo.pk))
+        #print(str(ret.query))
     if request.method == 'POST':
         if request.POST.get('form-type', False) == 'file-upload':
             file_meta = request.FILES['new-cctvs']
@@ -142,12 +148,15 @@ def cctv(request):
                 if len(rs) != 3: break
                 name = rs[0]
                 date = rs[1]
-                manager = Manager.objects.filter(pk=rs[2])
-                if manager.count() != 1:
+                #manager = Manager.objects.filter(pk=rs[2])
+                manager = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`id` = "+str(rs[2]))
+                print(str(manager.query))
+                if len(list(manager)) != 1:
                     return HttpResponseRedirect('/cctv')
                 manager = manager[0]
                 ts = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
                 Cctv.objects.create(name=name, start_date=ts, manager=manager)
+
             return HttpResponseRedirect('/cctv')
         elif request.POST.get('option', False) == False:
             date = request.POST['cctv-date']
@@ -159,17 +168,24 @@ def cctv(request):
             q = request.POST['cctv_query']
             if userinfo.charge:
                 if o == 'name':
-                    ret = Cctv.objects.filter(name=q)
+                    #ret = Cctv.objects.filter(name=q)
+                    ret = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`name` = '"+str(q)+"'")
                 elif o == 'start_date':
                     date = q
                     d = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
                                       int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),
                                       int(date.split('T')[1].split(':')[1]), 0, 0)
-                    ret = Cctv.objects.filter(start_date=d)
+                    #ret = Cctv.objects.filter(start_date=d)
+                    ret = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`start_date` = '"+str(d)+"'")
                 elif o == 'manager':
-                    if Manager.objects.filter(name=q).count() > 0:
-                        m = Manager.objects.get(name=q)
-                        ret = Cctv.objects.filter(manager=m)
+                    m = Manager.objects.raw(
+                        "SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`name` = '" + str(
+                            q) + "'")
+                    if len(list(m)) > 0:
+                        #m = Manager.objects.filter(name=q)
+                        #print(m.query)
+                        #ret = Cctv.objects.filter(manager=m[0])
+                        ret = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '"+str(m[0].pk)+"'")
                     else:
                         ret = None
             else:

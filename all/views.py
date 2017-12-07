@@ -689,6 +689,8 @@ def neighbor(request):
     if userinfo.charge:
         #ret = Neighbor.objects.all()
         #print(ret.query)
+        spotlist = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot`")
+        #print(spotlist.query)
         ret = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor`")
     else:
         #cc = Cctv.objects.filter(manager=userinfo)
@@ -735,9 +737,12 @@ def neighbor(request):
             if str(spot) == '<QuerySet []>':
                 ret = None
             else:
-                for s in spot:
+                #print(list(spot))
+                #print(spotlist)
+                for s in list(spot):
                     #print(s)
                     for l in spotlist:
+                        #print(l)
                         neighbor1 = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE (`all_neighbor`.`spot1_id` = '%s' AND `all_neighbor`.`spot2_id` = '%s')" % (s.pk,l.pk))
                         neighbor2 = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE (`all_neighbor`.`spot1_id` = '%s' AND `all_neighbor`.`spot2_id` = '%s')" % (l.pk,s.pk))
                         for n in neighbor1:

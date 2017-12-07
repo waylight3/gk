@@ -55,9 +55,9 @@
                     <tbody>
                         {% for c in cctvs %}
                         <tr>
-                            <td><a href="#">{{ c.name }}</a></td>
+                            <td><a href="/cctv_specific/{{ c.pk }}">{{ c.name }}</a></td>
                             <td>{{ c.start_date|date:"Y-m-d H:i:s" }}</td>
-                            <td><a href="#">{% for s in c.spots.all %}{{ s.address }} {% endfor %}</a></td>
+                            <td>{% for s in c.spots.all %}<a href="/spot_specific/{{ s.pk }}">{{ s.indoor_loc }}({{ s.pk }})</a> {% endfor %}</td>
                             <td><strong><a href="/manage/{{ userinfo.user.pk }}/remove_cctv/{{ c.pk }}" style="color: red;">제거</a></strong></td>
                         </tr>
                         {% endfor %}

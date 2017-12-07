@@ -746,12 +746,15 @@ def sequence(request):
 
 def sequence_specific(request, sequence_id):
     sequence = None
-    if Sequence.objects.filter(pk=sequence_id).count() > 0:
-        sequence = Sequence.objects.get(pk=sequence_id)
+    temp = Sequence.objects.raw("SELECT `all_sequence`.`id` FROM `all_sequence` WHERE `all_sequence`.`id` = '%s'" % sequence_id)
+    if len(list(temp)) > 0:
+        sequence = temp[0]
     if request.method == 'POST':
         if request.POST['form-type'] == 'add-neighbor':
             nid = request.POST['neighbor-id']
-            add_n = Neighbor.objects.get(pk=int(nid))
+            # add_n = Neighbor.objects.get(pk=int(nid))
+            add_n = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE `all_neighbor`.`id` = '%s'" % nid)
+            add_n = add_n[0]
             sequence.neighbors.add(add_n)
             sequence.save()
     data = {
@@ -763,18 +766,21 @@ def sequence_specific(request, sequence_id):
 def sequence_remove_neighbor(request, sequence_id, neighbor_id):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    # userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    sequence = Sequence.objects.filter(pk=sequence_id)
-    if sequence.count() != 1:
+    # sequence = Sequence.objects.filter(pk=sequence_id)
+    sequence = Sequence.objects.raw("SELECT `all_sequence`.`id` FROM `all_sequence` WHERE `all_sequence`.`id` = '%s'" % sequence_id)
+    if len(list(sequence)) != 1:
         return HttpResponseRedirect('/')
     sequence = sequence[0]
-    neighbor = Neighbor.objects.filter(pk=neighbor_id)
-    if neighbor.count() != 1:
+    # neighbor = Neighbor.objects.filter(pk=neighbor_id)
+    neighbor = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE `all_neighbor`.`id` = '%s'" % neighbor_id)
+    if len(list(neighbor)) != 1:
         return HttpResponseRedirect('/')
     neighbor = neighbor[0]
     sequence.neighbors.remove(neighbor)
@@ -787,17 +793,21 @@ def sequence_remove_neighbor(request, sequence_id, neighbor_id):
 def manage_edit(request, user_id):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    # userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    user = User.objects.filter(pk=user_id)
-    if user.count() != 1:
+    # user = User.objects.filter(pk=user_id)
+    user = User.objects.raw("SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = '%s'" % user_id)
+    if len(list(user)) != 1:
         return HttpResponseRedirect('/')
     user = user[0]
-    userinfo = Manager.objects.get(user=user)
+    # userinfo = Manager.objects.get(user=user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % user.pk)
+    userinfo = userinfo[0]
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
             pw = request.POST['user-pw']
@@ -809,10 +819,12 @@ def manage_edit(request, user_id):
             user.save()
         elif request.POST['form-type'] == 'add-cctv':
             cctv_id = request.POST['cctv-id']
-            cctv = Cctv.objects.get(pk=cctv_id)
+            # cctv = Cctv.objects.get(pk=cctv_id)
+            cctv = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`id` = '%s'" % cctv_id)
             cctv.manager = userinfo
             cctv.save()
-    cctvs =  Cctv.objects.filter(manager=userinfo)
+    # cctvs =  Cctv.objects.filter(manager=userinfo)
+    cctvs = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'" % userinfo.pk)
     data = {
         'userinfo': userinfo,
         'cctvs': cctvs,
@@ -823,8 +835,9 @@ def manage_edit(request, user_id):
 def my(request):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    # userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     pw_fail = None
@@ -853,7 +866,9 @@ def my(request):
         elif request.POST['form-type'] == 'edit-info':
             name = request.POST['user-name']
             cell = request.POST['user-cell']
-            userinfo = Manager.objects.get(user=request.user)
+            # userinfo = Manager.objects.get(user=request.user)
+            userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+            userinfo = userinfo[0]
             userinfo.name = name
             userinfo.cell = cell
             userinfo.save()
@@ -869,13 +884,15 @@ def my(request):
 def manage(request):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    # userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    users = Manager.objects.filter(charge=False)
+    # users = Manager.objects.filter(charge=False)
+    users = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`charge` = False")
     if request.method == 'POST':
         if request.POST['form-type'] == 'add-user':
             user_id = request.POST['user-id']
@@ -884,25 +901,27 @@ def manage(request):
             cell = request.POST['user-cell']
             user = User.objects.create(username=user_id, email='test@test.com', password=user_pw)
             Manager.objects.create(user=user, name=name, cell=cell)
-            users = Manager.objects.filter(charge=False)
+            # users = Manager.objects.filter(charge=False)
+            users = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`charge` = False")
         elif request.POST['form-type'] == 'search':
             o = request.POST.get('option', False)
             q = request.POST.get('query', False)
-            print(q)
             if o == 'id':
-                users = users.filter(user__username=q)
+                # users = users.filter(user__username=q)
+                users = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` INNER JOIN `auth_user` ON (`all_manager`.`user_id` = `auth_user`.`id`) WHERE (`all_manager`.`charge` = False AND `auth_user`.`username` = '%s')" % q)
             elif o == 'name':
-                users = users.filter(name=q)
+                # users = users.filter(name=q)
+                users = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE (`all_manager`.`charge` = False AND `all_manager`.`name` = '%s')" % q)
             elif o == 'cell':
-                users = users.filter(cell=q)
+                # users = users.filter(cell=q)
+                users = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE (`all_manager`.`charge` = False AND `all_manager`.`cell` = '%s')" % q)
             elif o == 'cctv':
-                cctvs = Cctv.objects.filter(name=q)
-                mm = '#'.join([c.manager.name for c in cctvs])
-                temp = []
-                for u in users:
-                    if u.name in mm:
-                        temp.append(u)
-                users = temp
+                # cctvs = Cctv.objects.filter(name=q)
+                cctvs = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`name` = '%s'" % q)
+                if len(list(cctvs)) == 1:
+                    users = [cctvs[0].manager]
+                else:
+                    users = []
     data = {
         'userinfo': userinfo,
         'users': users,
@@ -912,17 +931,23 @@ def manage(request):
 def manage_edit(request, user_id):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    # userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    user = User.objects.filter(pk=user_id)
-    if user.count() != 1:
+    # user = User.objects.filter(pk=user_id)
+    user = User.objects.raw("SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = '%s'" % user_id)
+    if len(list(user)) != 1:
         return HttpResponseRedirect('/')
     user = user[0]
-    userinfo = Manager.objects.get(user=user)
+    # userinfo = Manager.objects.filter(user=user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % user_id)
+    if len(list(userinfo)) != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
             pw = request.POST['user-pw']
@@ -938,7 +963,8 @@ def manage_edit(request, user_id):
             cctv = Cctv.objects.get(pk=cctv_id)
             cctv.manager = userinfo
             cctv.save()
-    cctvs =  Cctv.objects.filter(manager=userinfo)
+    # cctvs =  Cctv.objects.filter(manager=userinfo)
+    cctvs = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'" % userinfo.pk)
     data = {
         'userinfo': userinfo,
         'cctvs': cctvs,
@@ -948,14 +974,16 @@ def manage_edit(request, user_id):
 def manage_remove_user(request, user_id):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    # userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    user = User.objects.filter(pk=user_id)
-    if user.count() != 1:
+    # user = User.objects.filter(pk=user_id)
+    user = User.objects.raw("SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = '%s'" % user_id)
+    if len(list(user)) != 1:
         return HttpResponseRedirect('/')
     user = user[0]
     user.delete()
@@ -964,18 +992,21 @@ def manage_remove_user(request, user_id):
 def manage_remove_cctv(request, user_id, cctv_id):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    # userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     if not userinfo.charge:
         return HttpResponseRedirect('/')
-    user = User.objects.filter(pk=user_id)
-    if user.count() != 1:
+    # user = User.objects.filter(pk=user_id)
+    user = User.objects.raw("SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = '%s'" % user_id)
+    if len(list(user)) != 1:
         return HttpResponseRedirect('/')
     user = user[0]
-    cctv = Cctv.objects.filter(pk=cctv_id)
-    if cctv.count() != 1:
+    # cctv = Cctv.objects.filter(pk=cctv_id)
+    cctv = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`id` = '%s'" % cctv_id)
+    if len(list(cctv)) != 1:
         return HttpResponseRedirect('/')
     cctv = cctv[0]
     cctv.manager = None
@@ -1019,57 +1050,67 @@ def download_video(request, meta_id):
 
 def api(request, query):
     q = query.split('/')
-    print(q)
     if q[0] == 'cctv_list':
         if request.GET['user_id'] != '-1':
-            user = User.objects.get(pk=request.GET['user_id'])
-            manager = Manager.objects.get(user=user)
-            cctvs = Cctv.objects.filter(manager=manager)
+            # user = User.objects.filter(pk=request.GET['user_id'])
+            user = User.objects.raw("SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = '%s'" % request.GET['user_id'])
+            user = user[0]
+            # manager = Manager.objects.get(user=user)
+            manager = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % user.pk)
+            # cctvs = Cctv.objects.filter(manager=manager)
+            cctvs = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'" % manager.pk)
         else:
-            cctvs = Cctv.objects.all()
+            # cctvs = Cctv.objects.all()
+            cctvs = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv`")
         names = [{'id':c.pk, 'name':c.name, 'start_date':str(c.start_date), 'spots':' '.join([s.address for s in c.spots.all()]) } for c in cctvs]
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')
     elif q[0] == 'spot_list':
-        userinfo = Manager.objects.filter(user=request.user)
-        if userinfo.count() != 1:
+        # userinfo = Manager.objects.filter(user=request.user)
+        userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+        if len(list(userinfo)) != 1:
             return HttpResponseRedirect('/')
         userinfo = userinfo[0]
         names = []
         if userinfo.charge:
-            spot = Spot.objects.all()
+            # spot = Spot.objects.all()
+            spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot`")
             names = [{'id': s.pk, 'indoor_loc': s.indoor_loc, 'floor_no': s.floor_no, 'dep_name': s.dep_name,
                       'address': s.address} for s in spot]
         else:
-            for c in Cctv.objects.filter(manager=userinfo.pk):
+            cctvs = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'" % userinfo.pk)
+            for c in cctvs:
                 spot = c.spots.all()
                 for s in spot:
                     names.append({'id':s.pk, 'indoor_loc':s.indoor_loc, 'floor_no':s.floor_no, 'dep_name':s.dep_name, 'address':s.address})
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')
-
     elif q[0] == 'manager_list':
-        userinfo = Manager.objects.filter(user=request.user)
-        if userinfo.count() != 1:
+        # userinfo = Manager.objects.filter(user=request.user)
+        userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+        if len(list(userinfo)) != 1:
             return HttpResponseRedirect('/')
         userinfo = userinfo[0]
         names = []
         if userinfo.charge:
-            manager = Manager.objects.all()
+            # manager = Manager.objects.all()
+            manager = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager`")
             names = [{'id': m.pk, 'user': m.user.username, 'name': m.name, 'cell': m.cell} for m in manager]
         else:
             pass
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')
     elif q[0] == 'neighbor_list':
-        userinfo = Manager.objects.filter(user=request.user)
-        if userinfo.count() != 1:
+        # userinfo = Manager.objects.filter(user=request.user)
+        userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+        if len(list(userinfo)) != 1:
             return HttpResponseRedirect('/')
         userinfo = userinfo[0]
         names = []
         if not userinfo.charge:
             return HttpResponseRedirect('/')
-        neighbor = Neighbor.objects.all()
+        # neighbor = Neighbor.objects.all()
+        neighbor = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor`")
         names = [{'id': n.pk, 'spot1': n.spot1.indoor_loc, 'spot2': n.spot2.indoor_loc, 'name': n.name} for n in neighbor]
         jsondata = json.dumps(names)
         return HttpResponse(jsondata, content_type='application/json')

@@ -3,39 +3,44 @@
 {% block title %}Title{% endblock title %}
 
 {% block content %}
-<div>
-    <table border = "2" style = "width:100%">
-        <tr>
-            <th>indoor_loc</th>
-            <th>floor_no</th>
-            <th>dep_name</th>
-            <th>address</th>
-            <th>cctv</th>
-        </tr>
-        {% for s in spot %}
-        <tr>
-            <td><a href="spot_specific/{{s.pk}}">{{s.indoor_loc}}({{s.pk}})</td>
-            <td>{{s.floor_no}}</td>
-            <td>{{s.dep_name}}</td>
-            <td>{{s.address}}</td>
-            <td>
-                {% for c in s.spot_cctvs.all %}
-                    {% for cc in cctv %}
-                        {% if c == cc %}
-                            {{c.name}}
-                        {% endif %}
+<div class="headline"><h4>공간 목록</h4></div>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>indoor_loc</th>
+                <th>floor_no</th>
+                <th>dep_name</th>
+                <th>address</th>
+                <th>cctv</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in spot %}
+            <tr>
+                <td><a href="spot_specific/{{s.pk}}">{{s.indoor_loc}}({{s.pk}})</td>
+                <td>{{s.floor_no}}</td>
+                <td>{{s.dep_name}}</td>
+                <td>{{s.address}}</td>
+                <td>
+                    {% for c in s.spot_cctvs.all %}
+                        {% for cc in cctv %}
+                            {% if c == cc %}
+                                <a href="/cctv_specific/{{ c.pk }}">{{ c.name }}</a>
+                            {% endif %}
+                        {% endfor %}
                     {% endfor %}
-                {% endfor %}
-                </td>
-                
-        </tr>
-        {% endfor %}
+                    </td>
+                    
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
 <form action="" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
-    <input type="radio" name="option" value="cctv"> 해당cctv
+    <input type="radio" name="option" value="cctv" checked> CCTV
     <input type="text" name="spot_query">
-    <input type="submit" >
+    <input type="submit" value="검색">
 </form>
 {% endblock content %}

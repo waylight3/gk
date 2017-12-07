@@ -3,7 +3,7 @@
 {% block title %}Meta 및 영상 정보 :: 고래카레{% endblock title %}
 
 {% block content %}
-<div class="headline"><h4>동영상 및 메타로그</h4></div>
+<div class="headline"><h4>메타로그 및 영상 목록</h4></div>
 <form role="form" method="post" class="form-horizontal" id="form-video-meta">{% csrf_token %}
     <input type="hidden" name="form-type" value="add-video-meta">
     <input type="hidden" name="video-meta-id" id="video-meta-id" value="-1">
@@ -39,7 +39,7 @@
                 </tr>
             {% endfor %}
                 <tr class="info">
-                    <td><strong>평균</strong></td>
+                    <td><strong>전체</strong></td>
                     <td></td>
                     <td>{{ total_no }}</td>
                     <td>{{ total_objs_no }}</td>
@@ -54,8 +54,7 @@
         </table>
     </div>
 </form>
-<form action="" method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
+<form action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
     <input type="checkbox" name="delete" value="delete"> 결과 삭제
     <input type="radio" name="option" value="cctv-name" checked> CCTV 이름
     <input type="radio" name="option" value="spot"> 촬영 공간

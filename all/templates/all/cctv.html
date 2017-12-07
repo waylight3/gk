@@ -3,26 +3,33 @@
 {% block title %}Title{% endblock title %}
 
 {% block content %}
-<table border = "2" style = "width:100%">
-    <tr>
-        <th>모델명</th>
-        <th>설치날짜</th>
-        <th>공간</th>
-        {% if auth == "charged" %}
-        <th>책임자</th>
-        {% endif %}
-    </tr>
-    {% for c in cctv %}
-    <tr>
-        <td><a href="cctv_specific/{{c.pk}}">{{c.name}}</a></td>
-        <td>{{c.start_date}}</td>
-        <td>{% for s in c.spots.all %} {{ s.address }} {% endfor %}</td>
-        {% if auth == "charged" %}
-        <td><a href="manage/edit/{{c.manager.pk}}">{{c.manager.name}}</a></td>
-        {% endif %}
-    </tr>
-    {% endfor %}
-</table>
+<div class="headline"><h4>CCTV 목록</h4></div>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>모델명</th>
+                <th>설치날짜</th>
+                <th>공간</th>
+                {% if auth == "charged" %}
+                <th>책임자</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in cctv %}
+            <tr>
+                <td><a href="cctv_specific/{{c.pk}}">{{ c.name }}</a></td>
+                <td>{{ c.start_date|date:"Y-m-d H:i:s" }}</td>
+                <td>{% for s in c.spots.all %}<a href="/spot_specific/{{ s.pk }}">{{ s.indoor_loc }}({{ s.pk }})</a> {% endfor %}</td>
+                {% if auth == "charged" %}
+                <td><a href="manage/edit/{{c.manager.pk}}">{{ c.manager.name }}</a></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% if auth == "charged"  %}
 <form action="" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
@@ -32,56 +39,55 @@
     <input type="text" name="cctv_query">
     <input type="submit" value="검색">
 </form>
-<div class="col-md-10 col-md-offset-1">
-    <div class="headline"><h4>CCTV 정보</h4></div>
-    <form role="form" method="post" class="form-horizontal" id="formm-manager">{% csrf_token %}
-        <input type="hidden" name="form-type" value="edit-info">
-        <input type="hidden" name="manager-id" id="manager-id" value="-1">
-        <div class="form-group">
-            <label class="control-label col-sm-2">이름</label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control no-radius" name="cctv-name" id="cctv-name" value="" required>
-            </div>
+<div class="headline"><h4>CCTV 추가</h4></div>
+<form role="form" method="post" class="form-horizontal" id="formm-manager">{% csrf_token %}
+    <input type="hidden" name="form-type" value="edit-info">
+    <input type="hidden" name="manager-id" id="manager-id" value="-1">
+    <div class="form-group">
+        <label class="control-label col-sm-2">이름</label>
+        <div class="col-sm-8">
+            <input type="text" class="form-control no-radius" name="cctv-name" id="cctv-name" value="" required>
         </div>
-        <div class="form-group">
-            <label class="control-label col-sm-2">설치날짜</label>
-            <div class="col-sm-8">
-                <input type="datetime-local" class="form-control no-radius" name="cctv-date" id="cctv-date" value="" required>
-            </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-sm-2">설치날짜</label>
+        <div class="col-sm-8">
+            <input type="datetime-local" class="form-control no-radius" name="cctv-date" id="cctv-date" value="" required>
         </div>
-        {% if auth == "charged" %}
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped" id="manager_table">
-                <thead>
-                    <tr>
-                        <th style="width:25%;">아이디</th>
-                        <th style="width:25%;">이름</th>
-                        <th style="width:25%;">연락처</th>
-                        <th style="width:25%;">선택</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+    </div>
+    {% if auth == "charged" %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="manager_table">
+            <thead>
+                <tr>
+                    <th style="width:25%;">아이디</th>
+                    <th style="width:25%;">이름</th>
+                    <th style="width:25%;">연락처</th>
+                    <th style="width:25%;">선택</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    <div class="form-group">
+        <label class="control-label col-sm-2">책임자</label>
+        <div class="col-sm-8">
+            <input type="text" class="form-control no-radius" name="manager-name" id="manager-name" value="" required>
         </div>
-        {% endif %}
-        <div class="form-group">
-            <label class="control-label col-sm-2">책임자</label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control no-radius" name="manager-name" id="manager-name" value="" required>
-            </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-8">
+            <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 추가하기</button>
         </div>
-        <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-8">
-                <button type="submit" class="btn btn-primary btn-block no-radius"><i class="fa fa-check fa-fw"></i> 추가하기</button>
-            </div>
-        </div>
-    </form>
-</div>
+    </div>
+</form>
+<div class="headline"><h4>CCTV 추가 (CSV)</h4></div>
 <form role="form" method="post" category="file_upload" class="form-horizontal" enctype="multipart/form-data">{% csrf_token %}
     <input type="hidden" name="form-type" value="file-upload">
     <div class="form-group">
-        <label class="control-label col-sm-2">CCTV csv 파일 선택</label>
+        <label class="control-label col-sm-2">파일 선택 (.csv)</label>
         <div class="col-sm-8">
             <div class="input-group" style="width:100%;">
                 <span class="input-group-btn" style="width:1%">

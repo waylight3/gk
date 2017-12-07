@@ -873,8 +873,9 @@ def manage_edit(request, user_id):
             pw = request.POST['user-pw']
             name = request.POST['user-name']
             cell = request.POST['user-cell']
-            user.name = name
-            user.cell = cell
+            userinfo.name = name
+            userinfo.cell = cell
+            userinfo.save()
             user.set_password(pw)
             user.save()
         elif request.POST['form-type'] == 'add-cctv':

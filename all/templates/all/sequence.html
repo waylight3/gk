@@ -3,7 +3,9 @@
 {% block title %}Title{% endblock title %}
 
 {% block content %}
-<table border = "2" style = "width:100%">
+<div class="headline"><h4>시퀀스 목록</h4></div>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
     <tr>
         <th>아이디</th>
         <th>시퀀스</th>
@@ -12,19 +14,17 @@
     {% for s in sequence %}
     <tr>
         <td>{{s.pk}}</td>
-        <td>
-            {% for n in s.neighbors.all %}
-                <a href="neighbor_specific/{{n.pk}}">&lt;{{n.spot1.indoor_loc}}({{n.spot1.pk}})-{{n.spot2.indoor_loc}}({{n.spot2.pk}})&gt;</a>
-            {% endfor %}</td>
+        <td>{% for n in s.neighbors.all %} <a href="neighbor_specific/{{n.pk}}">&lt;{{n.spot1.indoor_loc}}({{n.spot1.pk}})-{{n.spot2.indoor_loc}}({{n.spot2.pk}})&gt;</a> {% endfor %}</td>
         <td><strong><a href="/sequence_specific/{{s.pk}}" style="color: green;">수정</a></strong></td>
     </tr>
     {% endfor %}
 </table>
+</div>
 <form action="" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
-    <input type="radio" name="option" value="neighbor"> 이웃공간
+    <input type="radio" name="option" value="neighbor" checked> 이웃공간
     <input type="radio" name="option" value="add-sequence"> 추가
     <input type="text" name="sequence_query">
-    <input type="submit" >
+    <input type="submit" value="검색">
 </form>
 {% endblock content %}

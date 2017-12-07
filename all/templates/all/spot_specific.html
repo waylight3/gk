@@ -57,9 +57,13 @@
                     <tbody>
                     {% for c in spot.spot_cctvs.all %}
                         <tr>
-                            <td><a href="/cctv_specific/{{c.pk}}">{{ c.name }}</a></td>
-                            <td>{{ c.start_date|date:"Y-m-d H:i:s" }}</td>
-                            <td><a href="/manage/edit/{{ c.manager.user.pk }}">{{ c.manager.name }}</a></td>
+                            {% for cc in cctv %}
+                                {% if c == cc %}
+                                <td><a href="/cctv_specific/{{c.pk}}">{{ c.name }}</a></td>
+                                <td>{{ c.start_date|date:"Y-m-d H:i:s" }}</td>
+                                <td><a href="/manage/edit/{{ c.manager.user.pk }}">{{ c.manager.name }}</a></td>
+                                {% endif %}
+                            {% endfor %}
                         </tr>
                     {% endfor %}
                     </tbody>

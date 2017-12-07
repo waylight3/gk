@@ -57,8 +57,12 @@ def logout(request):
 def spot(request):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    #userinfo1 = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '"+str(request.user.pk)+"'")
+    #print(list(userinfo.query))
+    #print("I'm alive")
+    #print(userinfo)
+    if len(list(userinfo.query)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     ret = []
@@ -66,20 +70,26 @@ def spot(request):
         ret = Spot.objects.all()
         cc = Cctv.objects.all()
     else:
-        cc = Cctv.objects.filter(manager=userinfo)
-        for i in range(len(cc)):
-            spot = list(Spot.objects.filter(spot_cctvs=(cc[i])))
-            for j in range(len(spot)):
+        #cc = Cctv.objects.filter(manager=userinfo)
+        cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'"% userinfo.pk)
+        for i in range(len(list(cc.query))):
+            #spot = Spot.objects.filter(spot_cctvs=(cc[i]))
+            spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` INNER JOIN `all_cctv_spots` ON (`all_spot`.`id` = `all_cctv_spots`.`spot_id`) WHERE `all_cctv_spots`.`cctv_id` = '%s'" % cc[i].pk)
+            #print(cc[i].pk)
+            #print(spot.query)
+            for j in range(len(list(spot))):
                 if not spot[j] in ret:
                     ret = ret + [spot[j]]
                 #print(spot[0])
     if request.method == 'POST':
         o = request.POST['option']
         q = request.POST['spot_query']
-        c = Cctv.objects.filter(name=q)
-        print(c) 
-        ret = Spot.objects.filter(spot_cctvs=c)
-        print(ret)
+        #c = Cctv.objects.filter(name=q)
+        c = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`name` = '%s'" % q)
+        #print(c.query) 
+        #ret = Spot.objects.filter(spot_cctvs=c)
+        ret = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` INNER JOIN `all_cctv_spots` ON (`all_spot`.`id` = `all_cctv_spots`.`spot_id`) WHERE `all_cctv_spots`.`cctv_id` = (SELECT U0.`id` AS Col1 FROM `all_cctv` U0 WHERE U0.`name` = '%s')" %q)
+        #print(ret.query)
     data = {
         'spot': ret,
         'cctv': cc,
@@ -87,32 +97,56 @@ def spot(request):
     return render(request, 'all/spot.html', data)
 
 def spot_specific(request, spot_id):
-    cctv = None
-    spot = None
-    if Spot.objects.filter(pk=spot_id).count() > 0:
-        spot = Spot.objects.get(pk=spot_id)
-    cctv = Cctv.objects.all()
-    if request.method == 'POST':
-        if request.POST['form-type'] == 'edit-info':
-            pw = request.POST['user-pw']
-            name = request.POST['user-name']
-            manager_id = request.POST['manager-id']
-            spot.manager = Manager.objects.get(pk=manager_id)
-            cctv.save()
-        elif request.POST['form-type'] == 'add-cctv':
-            cctv_id = request.POST['cctv-id']
-            cctv = Cctv.objects.get(pk=cctv_id)
-            exist_flag = False
-            for c in spot.cctvs.all():
-                if c == cctv:
-                    exist_flag = True
-                    #print("already exist")
-                    break
-            if exist_flag == False:
-                spot.cctvs.add(cctv)
-                cctv.save()
+    cc = None
+    #temp = Spot.objects.filter(pk=spot_id)
+    spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`id` = '%s'" % spot_id)
+    #print(spot.query)
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/')
+    #userinfo1 = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '"+str(request.user.pk)+"'")
+    if len(list(userinfo.query)) != 1:
+        return HttpResponseRedirect('/')
+    userinfo = userinfo[0]
+    ret = []
+    #print(userinfo.charge)
+    if userinfo.charge:
+        ret = Spot.objects.all()
+        cc = Cctv.objects.all()
+    else:
+    	cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'"% userinfo.pk)
+    	#print(cc)
+    if len(list(spot)) > 0:
+    	spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`id` = '%s'" % spot_id)
+    	#temp = Spot.objects.filter(pk=spot_id)
+    	#spot = Spot.objects.get(pk=spot_id)
+    	spot = spot[0]
+    	#print(temp[0])
+    	#print(spot)
+    # if request.method == 'POST':
+    #     if request.POST['form-type'] == 'edit-info':
+    #         pw = request.POST['user-pw']
+    #         name = request.POST['user-name']
+    #         manager_id = request.POST['manager-id']
+    #         temp = Manager.objects.filter(pk=manager_id)
+    #         print(temp.query)
+    #         spot.manager = Manager.objects.get(pk=manager_id)
+    #         cctv.save()
+    #     elif request.POST['form-type'] == 'add-cctv':
+    #         cctv_id = request.POST['cctv-id']
+    #         cctv = Cctv.objects.get(pk=cctv_id)
+    #         exist_flag = False
+    #         for c in spot.cctvs.all():
+    #             if c == cctv:
+    #                 exist_flag = True
+    #                 #print("already exist")
+    #                 break
+    #         if exist_flag == False:
+    #             spot.cctvs.add(cctv)
+    #             cctv.save()
+    # ctrl + /
     data = {
-        'cctv': cctv,
+        'cctv': cc,
         'spot': spot,
     }
 

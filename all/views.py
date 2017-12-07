@@ -150,7 +150,7 @@ def cctv(request):
                 date = rs[1]
                 #manager = Manager.objects.filter(pk=rs[2])
                 manager = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`id` = "+str(rs[2]))
-                print(str(manager.query))
+                #print(str(manager.query))
                 if len(list(manager)) != 1:
                     return HttpResponseRedirect('/cctv')
                 manager = manager[0]
@@ -199,26 +199,30 @@ def cctv(request):
 def cctv_specific(request, cctv_id):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    userinfo = Manager.objects.raw("SELECT * FROM `all_manager` WHERE `all_manager`. `user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     auth = "un-charged"
     if userinfo.charge:
         auth = "charged"
-    cctv = Cctv.objects.filter(pk=cctv_id)
-    if cctv.count() != 1:
+    #cctv = Cctv.objects.filter(pk=cctv_id)
+    cctv = Cctv.objects.raw("SELECT * FROM `all_cctv` WHERE `all_cctv`.`id` = '%s'" % cctv_id)
+    if len(list(cctv)) != 1:
         return HttpResponseRedirect('/cctv')
     cctv = cctv[0]
     if cctv.manager.pk != userinfo.pk and userinfo.charge == False:
         return HttpResponseRedirect('/cctv')
     meta_list = []
-    for m in Meta.objects.filter(cctv=cctv):
+    #metamon = Meta.objects.filter(cctv=cctv)
+    for m in Meta.objects.raw("SELECT * FROM `all_meta` WHERE `all_meta`.`cctv_id` = '%s'" % cctv.pk):
         avg_size, avg_xpos, avg_ypos, avg_speed = 0, 0, 0, 0
         objs = set()
         time_min = None
         time_max = None
-        for r in Row.objects.filter(meta=m):
+        #metamon = Row.objects.filter(meta=m)
+        meta_row = Row.objects.raw("SELECT * FROM `all_row` WHERE `all_row`.`meta_id` = '%s'" % m.pk)
+        for r in meta_row:
             avg_size += r.size
             avg_xpos += r.xpos
             avg_ypos += r.ypos
@@ -228,14 +232,19 @@ def cctv_specific(request, cctv_id):
                 time_min = r.time_stamp
             if time_max == None or time_max < r.time_stamp:
                 time_max = r.time_stamp
-        cnt = Row.objects.filter(meta=m).count()
-        avg_size /= cnt
-        avg_xpos /= cnt
-        avg_ypos /= cnt
-        avg_speed /= cnt
-        dtime = time_max - time_min
-        meta_list.append({'pk':m.pk, 'name':m.name, 'cctv':m.cctv, 'video':m.video, 'avg_size':avg_size, 'avg_xpos':avg_xpos, 'avg_ypos':avg_ypos, 'avg_speed':avg_speed, 'rec_no':cnt, 'obj_no':len(objs), 'time_len':'%s:%s:%s' % (dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
-    spot = Spot.objects.all()
+        cnt = len(list(meta_row))
+        if cnt != 0:
+            avg_size /= cnt
+            avg_xpos /= cnt
+            avg_ypos /= cnt
+            avg_speed /= cnt
+            dtime = time_max - time_min
+            meta_list.append({'pk': m.pk, 'name': m.name, 'cctv': m.cctv, 'video': m.video, 'avg_size': avg_size,
+                              'avg_xpos': avg_xpos, 'avg_ypos': avg_ypos, 'avg_speed': avg_speed, 'rec_no': cnt,
+                              'obj_no': len(objs), 'time_len': '%s:%s:%s' % (
+                dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
+    #spot = Spot.objects.all()
+    spot = Spot.objects.raw("SELECT * FROM `all_spot`")
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
             name = request.POST['cctv-name']
@@ -245,19 +254,22 @@ def cctv_specific(request, cctv_id):
             cctv.start_date = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
                                                 int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),
                                                 int(date.split('T')[1].split(':')[1]), 0, 0)
-            if Manager.objects.filter(pk=manager_id).count() == 1:
-                cctv.manager = Manager.objects.get(pk=manager_id)
+            #manager_list = Manager.objects.filter(pk=manager_id)
+            manager_list = Manager.objects.raw("SELECT * FROM `all_manager` WHERE `all_manager`.`id` = '%s'" % manager_id)
+            if len(list(manager_list)) == 1:
+                cctv.manager = manager_list[0]
             cctv.save()
         elif request.POST['form-type'] == 'add-spot':
             spot_id = request.POST['spot-id']
-            spot = Spot.objects.get(pk=spot_id)
+            #spot = Spot.objects.filter(pk=spot_id)
+            spot = Spot.objects.raw("SELECT * FROM `all_spot` WHERE `all_spot`.`id` = '%s'" % spot_id)
             exist_flag = False
             for s in cctv.spots.all():
-                if s == spot:
+                if s == spot[0]:
                     exist_flag = True
                     break
             if exist_flag == False:
-                cctv.spots.add(spot)
+                cctv.spots.add(spot[0])
                 cctv.save()
         elif request.POST['form-type'] == 'file-upload':
             file_video = request.FILES['new-video']
@@ -283,13 +295,15 @@ def cctv_specific(request, cctv_id):
     return render(request, 'all/cctv_specific.html', data)
 
 def cctv_remove_spot(request, cctv_id, spot_id):
-    cctv = Cctv.objects.filter(pk=cctv_id)
-    if cctv.count() != 1:
+    #cctv = Cctv.objects.filter(pk=cctv_id)
+    cctv = Cctv.objects.raw("SELECT * FROM `all_cctv` WHERE `all_cctv`.`id` = '%s'" % cctv_id)
+    if len(list(cctv)) != 1:
         return HttpResponseRedirect('/')
     cctv = cctv[0]
-    #cctv.spots.through.objects.filter(pk=spot_id).delete()
-    spot = Spot.objects.filter(pk=spot_id)
-    if spot.count() != 1:
+    #spot = Spot.objects.filter(pk=spot_id)
+    spot = Spot.objects.raw("SELECT * FROM `all_spot` WHERE `all_spot`.`id` = '%s'" % spot_id)
+    #print(spot.query)
+    if len(list(spot)) != 1:
         return HttpResponseRedirect('/')
     for s in cctv.spots.all():
         if s == spot[0]:
@@ -298,13 +312,14 @@ def cctv_remove_spot(request, cctv_id, spot_id):
     return HttpResponseRedirect('/cctv_specific/%s' % cctv_id)
 
 def cctv_remove_meta(request, cctv_id, meta_id):
-    cctv = Cctv.objects.filter(pk=cctv_id)
-    if cctv.count() != 1:
+    #cctv = Cctv.objects.filter(pk=cctv_id)
+    cctv = Cctv.objects.raw("SELECT * FROM `all_cctv` WHERE `all_cctv`.`id` = '%s'" % cctv_id)
+    if len(list(cctv)) != 1:
         return HttpResponseRedirect('/')
     cctv = cctv[0]
-    #cctv.spots.through.objects.filter(pk=spot_id).delete()
-    meta = Meta.objects.filter(pk=meta_id)
-    if meta.count() != 1:
+    #meta = Meta.objects.filter(pk=meta_id)
+    meta = Meta.objects.raw("SELECT `all_meta`.`id`, `all_meta`.`name`, `all_meta`.`cctv_id`, `all_meta`.`video_id` FROM `all_meta` WHERE `all_meta`.`id` = '%s'" % meta_id)
+    if len(list(meta)) != 1:
         return HttpResponseRedirect('/')
     meta[0].delete()
 
@@ -313,19 +328,24 @@ def cctv_remove_meta(request, cctv_id, meta_id):
 def meta(request):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    #userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT * FROM `all_manager` WHERE `all_manager`. `user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     metas = []
-    cctvs = Cctv.objects.filter(manager=userinfo)
+    #cctvs = Cctv.objects.filter(manager=userinfo)
+    cctvs = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'" % userinfo.pk)
+    #print(cctvs.query)
     if userinfo.charge:
-        cctvs = Cctv.objects.all()
+        #cctvs = Cctv.objects.all()
+        cctvs = Cctv.objects.raw("SELECT * FROM `all_cctv`")
     if request.method == 'POST':
         o = request.POST['option']
         q = request.POST['meta-query']
         if o == 'cctv-name':
-            cctvs = cctvs.filter(name=q)
+            #cctvs = cctvs.filter(name=q)
+            cctvs = Cctv.objects.raw("SELECT * FROM `all_cctv` WHERE `all_cctv`.`name` = '%s'" % q)
         elif o == 'spot':
             temp = []
             for c in cctvs:
@@ -338,7 +358,7 @@ def meta(request):
             cctvs = []
             q = ''.join(q.split(","))
             tmp = []
-            for ss in Sequence.objects.all():
+            for ss in Sequence.objects.raw("SELECT * FROM `all_sequence`"):
                 temp1 = list(ss.neighbors.all())
                 temp2 = [temp1[0]]
                 num = len(temp1)-1
@@ -363,7 +383,7 @@ def meta(request):
                         if c.manager == userinfo:
                             good = True
                             break
-                    if not good:
+                    if userinfo.charge == False and not good:
                         total_good = False
                         break
                     good = False
@@ -371,7 +391,7 @@ def meta(request):
                         if c.manager == userinfo:
                             good = True
                             break
-                    if not good:
+                    if userinfo.charge == False and not good:
                         total_good = False
                         break
                 if not total_good:
@@ -407,15 +427,20 @@ def meta(request):
             total_ypos = 0.0
             total_speed = 0.0
             for c in cctvs:
-                for m in Meta.objects.filter(cctv=c):
+                # metamon = Meta.objects.filter(cctv=cctv)
+                #for m in Meta.objects.filter(cctv=c):
+                for m in Meta.objects.raw("SELECT * FROM `all_meta` WHERE `all_meta`.`cctv_id` = '%s'" % c.pk):
                     time_min, time_max = None, None
-                    for r in Row.objects.filter(meta=m):
+                    #metamon = Row.objects.filter(meta=m)
+                    metamon = Row.objects.raw("SELECT * FROM `all_row` WHERE `all_row`.`meta_id` = '%s'" % m.pk)
+                    for r in metamon:
+                        #print(r.time_stamp)
                         if time_min == None or time_min > r.time_stamp:
                             time_min = r.time_stamp
                         if time_max == None or time_max < r.time_stamp:
                             time_max = r.time_stamp
-                    print(c, time_min, time_max)
-                    if t1 <= time_min and time_max <= t2:
+                    #print(c, time_min, time_max)
+                    if time_max != None and time_min != None and t1 <= time_min and time_max <= t2:
                         if request.POST.get('delete', False):
                             m.delete()
                             continue
@@ -423,7 +448,8 @@ def meta(request):
                         objs = set()
                         time_min = None
                         time_max = None
-                        for r in Row.objects.filter(meta=m):
+                        meta_row = Row.objects.raw("SELECT * FROM `all_row` WHERE `all_row`.`meta_id` = '%s'" % m.pk)
+                        for r in meta_row:
                             avg_size += r.size
                             total_size += r.size
                             avg_xpos += r.xpos
@@ -439,7 +465,7 @@ def meta(request):
                                 time_min = r.time_stamp
                             if time_max == None or time_max < r.time_stamp:
                                 time_max = r.time_stamp
-                        cnt = Row.objects.filter(meta=m).count()
+                        cnt = cnt = len(list(meta_row))
                         avg_size /= cnt
                         avg_xpos /= cnt
                         avg_ypos /= cnt
@@ -468,7 +494,8 @@ def meta(request):
     total_ypos = 0.0
     total_speed = 0.0
     for c in cctvs:
-        for m in Meta.objects.filter(cctv=c):
+        #for m in Meta.objects.filter(cctv=c):
+        for m in Meta.objects.raw("SELECT * FROM `all_meta` WHERE `all_meta`.`cctv_id` = '%s'" % c.pk):
             if request.POST.get('delete', False):
                 m.delete()
                 continue
@@ -476,7 +503,9 @@ def meta(request):
             objs = set()
             time_min = None
             time_max = None
-            for r in Row.objects.filter(meta=m):
+            #for r in Row.objects.filter(meta=m):
+            metamon = Row.objects.raw("SELECT * FROM `all_row` WHERE `all_row`.`meta_id` = '%s'" % m.pk)
+            for r in metamon:
                 avg_size += r.size
                 total_size += r.size
                 avg_xpos += r.xpos
@@ -492,13 +521,14 @@ def meta(request):
                     time_min = r.time_stamp
                 if time_max == None or time_max < r.time_stamp:
                     time_max = r.time_stamp
-            cnt = Row.objects.filter(meta=m).count()
-            avg_size /= cnt
-            avg_xpos /= cnt
-            avg_ypos /= cnt
-            avg_speed /= cnt
-            dtime = time_max - time_min
-            metas.append({'meta':m, 'pk':m.pk, 'name':m.name, 'cctv':m.cctv, 'video':m.video, 'avg_size':avg_size, 'avg_xpos':avg_xpos, 'avg_ypos':avg_ypos, 'avg_speed':avg_speed, 'rec_no':cnt, 'obj_no':len(objs), 'time_len':'%s:%s:%s' % (dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
+            cnt = len(list(metamon))
+            if cnt != 0:
+                avg_size /= cnt
+                avg_xpos /= cnt
+                avg_ypos /= cnt
+                avg_speed /= cnt
+                dtime = time_max - time_min
+                metas.append({'meta':m, 'pk':m.pk, 'name':m.name, 'cctv':m.cctv, 'video':m.video, 'avg_size':avg_size, 'avg_xpos':avg_xpos, 'avg_ypos':avg_ypos, 'avg_speed':avg_speed, 'rec_no':cnt, 'obj_no':len(objs), 'time_len':'%s:%s:%s' % (dtime.seconds // 3600, dtime.seconds % 3600 // 60, dtime.seconds % 60)})
     if request.POST.get('delete', False):
         return HttpResponseRedirect('/meta')
     data = {
@@ -517,17 +547,25 @@ def meta(request):
 def meta_specific(request, meta_id):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    #userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT * FROM `all_manager` WHERE `all_manager`. `user_id` = '%s'" % request.user.pk)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
-    if Meta.objects.filter(pk=meta_id).count() > 0:
-        meta = Meta.objects.get(pk=meta_id)
-    if userinfo.charge == False and meta.cctv.manager != userinfo:
+    #meta_list = Meta.objects.filter(pk=meta_id)
+    meta_list = Meta.objects.raw("SELECT `all_meta`.`id`, `all_meta`.`name`, `all_meta`.`cctv_id`, `all_meta`.`video_id` FROM `all_meta` WHERE `all_meta`.`id` = '%s'" % meta_id)
+    if len(list(meta_list)) > 0:
+        meta = meta_list[0]
+        if userinfo.charge == False and meta.cctv.manager != userinfo:
+            return HttpResponseRedirect('/')
+    else:
         return HttpResponseRedirect('/')
     row = []
-    if Row.objects.filter(meta=meta).count() > 0:
-        row+=list(Row.objects.filter(meta=meta))
+    #row_list = Row.objects.filter(meta=meta)
+    row_list = Row.objects.raw("SELECT * FROM `all_row` WHERE `all_row`.`meta_id` = '%s'" % meta.pk)
+    #print(row_list.query)
+    if len(list(row_list)) > 0:
+        row+=list(row_list)
     data = {
         'meta': meta,
         'row': row,
@@ -535,8 +573,9 @@ def meta_specific(request, meta_id):
     return render(request, 'all/meta_specific.html', data)
 
 def remove_meta(request, meta_id):
-    meta = Meta.objects.filter(pk=meta_id)
-    if meta.count() != 1:
+    #meta = Meta.objects.filter(pk=meta_id)
+    meta = Meta.objects.raw("SELECT `all_meta`.`id`, `all_meta`.`name`, `all_meta`.`cctv_id`, `all_meta`.`video_id` FROM `all_meta` WHERE `all_meta`.`id` = '%s'" % meta_id)
+    if len(list(meta)) != 1:
         return HttpResponseRedirect('/')
     meta[0].delete()
 

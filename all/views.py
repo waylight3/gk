@@ -16,6 +16,7 @@ import datetime, csv, os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import mimetypes
+from django.db import connection
 
 def index(request):
     data = {
@@ -155,14 +156,25 @@ def cctv(request):
                     return HttpResponseRedirect('/cctv')
                 manager = manager[0]
                 ts = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
-                Cctv.objects.create(name=name, start_date=ts, manager=manager)
-
+                #Cctv.objects.create(name=name, start_date=ts, manager=manager)
+                with connection.cursor() as c:
+                    c.execute(
+                        "INSERT INTO `all_cctv` (`name`, `start_date`, `manager_id`) VALUES ('%s', '%s', '%s')" % (
+                        name, ts, str(manager.pk)))
             return HttpResponseRedirect('/cctv')
         elif request.POST.get('option', False) == False:
             date = request.POST['cctv-date']
-            Cctv.objects.create(name=request.POST['cctv-name'], start_date=datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
-                              int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),
-                              int(date.split('T')[1].split(':')[1]), 0, 0), manager=Manager.objects.get(pk=request.POST['manager-id']))
+            #Cctv.objects.create(name=request.POST['cctv-name'], start_date=datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
+            #                  int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]),
+            #                  int(date.split('T')[1].split(':')[1]), 0, 0), manager=Manager.objects.get(pk=request.POST['manager-id']))
+            with connection.cursor() as c:
+                c.execute(
+                    "INSERT INTO `all_cctv` (`name`, `start_date`, `manager_id`) VALUES ('%s', '%s', '%s')" % (
+                    request.POST['cctv-name'],
+                    datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]),
+                                          int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0])),
+                    request.POST['manager-id']))
+
         else:
             o = request.POST['option']
             q = request.POST['cctv_query']
@@ -275,15 +287,54 @@ def cctv_specific(request, cctv_id):
             file_video = request.FILES['new-video']
             file_meta = request.FILES['new-meta']
             default_storage.save('%s' % file_video.name, ContentFile(file_video.read()))
-            video = Video.objects.create(name=''.join(file_video.name.split('.')[:-1]), ext=file_video.name.split('.')[-1], cctv=cctv)
-            mmeta = Meta.objects.create(name=file_meta.name, cctv=cctv, video=video)
+            #video = Video.objects.create(name=''.join(file_video.name.split('.')[:-1]), ext=file_video.name.split('.')[-1], cctv=cctv)
+            with connection.cursor() as c:
+                c.execute(
+                    "INSERT INTO `all_video` (`name`, `ext`, `cctv_id`) VALUES ('%s', '%s', '%s')" % (
+                        ''.join(file_video.name.split('.')[:-1]),
+                        file_video.name.split('.')[-1],
+                        str(cctv.pk)))
+            videos = Video.objects.raw("SELECT `all_video`.`id`, `all_video`.`name`, `all_video`.`ext`, `all_video`.`cctv_id` FROM `all_video`")
+            video = None
+            for v in videos:
+                if video == None:
+                    video = v
+                elif video.pk < v.pk:
+                    video = v
+            #mmeta = Meta.objects.create(name=file_meta.name, cctv=cctv, video=video)
+            with connection.cursor() as c:
+                c.execute(
+                    "INSERT INTO `all_meta` (`name`, `cctv_id`, `video_id`) VALUES ('%s', '%s', '%s')" % (
+                        file_meta.name,
+                        str(cctv.pk),
+                        str(video.pk)))
+            mmetas = Meta.objects.raw("SELECT * FROM `all_meta`")
+            mmeta = None
+            for mm in mmetas:
+                if mmeta == None:
+                    mmeta = mm
+                elif mmeta.pk < mm.pk:
+                    mmeta = mm
             rows = file_meta.read().decode().split('\n')
             for r in rows:
                 rs = r.split(',')
                 if len(rs) != 7: break
                 date = rs[1]
                 ts = datetime.datetime(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2].split('T')[0]), int(date.split('T')[1].split(':')[0]), int(date.split('T')[1].split(':')[1]), 0, 0)
-                Row.objects.create(meta=mmeta, obj_id=rs[0], time_stamp=ts, size=float(rs[2]), xpos=float(rs[3]), ypos=float(rs[4]), speed=float(rs[5]), color=rs[6])
+                #Row.objects.create(meta=mmeta, obj_id=rs[0], time_stamp=ts, size=float(rs[2]), xpos=float(rs[3]), ypos=float(rs[4]), speed=float(rs[5]), color=rs[6])
+                with connection.cursor() as c:
+                    c.execute(
+                        "INSERT INTO `all_row` (`meta_id`, `obj_id`, `time_stamp`, `size`, `xpos`, `ypos`, `speed`, `color`)"
+                        " VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')" % (
+                            str(mmeta.pk),
+                            rs[0],
+                            ts,
+                            str(float(rs[2])),
+                            str(float(rs[3])),
+                            str(float(rs[4])),
+                            str(float(rs[5])),
+                            str(rs[6])
+                        ))
             return HttpResponseRedirect('/cctv_specific/%s' % cctv.pk)
     data = {
         'cctv': cctv,

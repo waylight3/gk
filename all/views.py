@@ -756,10 +756,17 @@ def neighbor(request):
                 #s1 = Spot.objects.get(indoor_loc=add.split('-')[0][1:])
                 #s2 = Spot.objects.get(indoor_loc=add.split('-')[-1][:-1])
                 #print(s1, s2)
-                nn = Neighbor.objects.create(spot1=s1, spot2=s2)
+                #nn = Neighbor.objects.create(spot1=s1, spot2=s2)
+                with connection.cursor() as c:
+                    c.execute(
+                        "INSERT INTO `all_neighbor` (`name`, `spot1_id`, `spot2_id`) VALUES ('%s', '%s', '%s')" % (
+                            name,
+                            str(s1.pk),
+                            str(s2.pk)
+                        ))
                 #print(nn)
-                nn.name = name
-                nn.save()
+                #nn.name = name
+                #nn.save()
     data = {
         'neighbor': ret,
     }
@@ -1039,12 +1046,19 @@ def manage(request):
     users = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`charge` = False")
     if request.method == 'POST':
         if request.POST['form-type'] == 'add-user':
-            user_id = request.POST['user-id']
+            id = request.POST['user-id']
             user_pw = request.POST['user-pw']
             name = request.POST['user-name']
             cell = request.POST['user-cell']
-            user = User.objects.create(username=user_id, email='test@test.com', password=user_pw)
-            Manager.objects.create(user=user, name=name, cell=cell)
+            user = User.objects.create(username=id, email='test@test.com', password=user_pw)
+            #Manager.objects.create(user=user, name=name, cell=cell)
+            with connection.cursor() as c:
+                c.execute(
+                    "INSERT INTO `all_manager` (`user_id`, `name`, `cell`, `charge`) VALUES ('%s', '%s', '%s', False)" % (
+                        str(user.pk),
+                        name,
+                        cell
+                    ))
             # users = Manager.objects.filter(charge=False)
             users = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`charge` = False")
         elif request.POST['form-type'] == 'search':

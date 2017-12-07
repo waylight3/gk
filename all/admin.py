@@ -23,11 +23,10 @@ class StatAdmin(admin.ModelAdmin):
 class SpotAdmin(admin.ModelAdmin):
 	list_display = ('indoor_loc', 'floor_no', 'dep_name', 'address')
 
-class NeighborAdmin(models.Model):
+class NeighborAdmin(admin.ModelAdmin):
 	list_display = ('name', 'spot1', 'spot2')
 
-class SequenceAdmin(models.Model):
-	list_display = ('pk')
+class SequenceAdmin(admin.ModelAdmin):
 	filter_horizontal = ('neighbors', )
 
 admin.site.register(Manager, ManagerAdmin)
@@ -37,5 +36,5 @@ admin.site.register(Row, RowAdmin)
 admin.site.register(Video, VideoAdmin)
 admin.site.register(Stat, StatAdmin)
 admin.site.register(Spot, SpotAdmin)
-admin.site.register(Neighbor)
-admin.site.register(Sequence)
+admin.site.register(Neighbor, NeighborAdmin)
+admin.site.register(Sequence, SequenceAdmin)

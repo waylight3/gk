@@ -20,7 +20,7 @@ class Spot(models.Model):
     address = models.CharField(max_length=128, default='주소')
 
     def __str__(self):
-        return '%s' % self.address
+        return '%s(%s)' % (self.indoor_loc, self.pk)
 
 class Cctv(models.Model):
     name = models.CharField(max_length=128, default='이름')

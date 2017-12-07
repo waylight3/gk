@@ -32,32 +32,6 @@
                 </div>
             </div>
         </form>
-
-        <div class="headline"><h4>CCTV</h4></div>
-        <form role="form" method="post" class="form-horizontal" id="form-spot">{% csrf_token %}
-            <input type="hidden" name="form-type" value="add-cctv">
-            <input type="hidden" name="cctv-id" id="cctv-id" value="-1">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th style="width:20%;">이름</th>
-                            <th style="width:10%;">설치날짜</th>
-                            <th style="width:20%;">책임자</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for c in spot.spot_cctvs.all %}
-                        <tr>
-                            <td><a href="/cctv_specific/{{c.pk}}">{{ c.name }}</a></td>
-                            <td>{{ c.start_date }}</td>
-                            <td>{{ c.manager }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </form>
 {% endblock content %}
 {% block javascript %}
 <script type="text/javascript">

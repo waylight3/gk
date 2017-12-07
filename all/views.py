@@ -67,8 +67,12 @@ def spot(request):
     userinfo = userinfo[0]
     ret = []
     if userinfo.charge:
-        ret = Spot.objects.all()
-        cc = Cctv.objects.all()
+        #ret = Spot.objects.all()
+        ret = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot`")
+        #print(ret.query)
+        #cc = Cctv.objects.all()
+        cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv`")
+        #print(cc.query)
     else:
         #cc = Cctv.objects.filter(manager=userinfo)
         cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'"% userinfo.pk)
@@ -111,18 +115,22 @@ def spot_specific(request, spot_id):
     ret = []
     #print(userinfo.charge)
     if userinfo.charge:
-        ret = Spot.objects.all()
-        cc = Cctv.objects.all()
+        #ret = Spot.objects.all()
+        ret = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot`")
+        #print(ret.query)
+        #cc = Cctv.objects.all()
+        cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv`")
+        #print(cc.query)
     else:
-    	cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'"% userinfo.pk)
-    	#print(cc)
+        cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'"% userinfo.pk)
+        #print(cc)
     if len(list(spot)) > 0:
-    	spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`id` = '%s'" % spot_id)
-    	#temp = Spot.objects.filter(pk=spot_id)
-    	#spot = Spot.objects.get(pk=spot_id)
-    	spot = spot[0]
-    	#print(temp[0])
-    	#print(spot)
+        spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`id` = '%s'" % spot_id)
+        #temp = Spot.objects.filter(pk=spot_id)
+        #spot = Spot.objects.get(pk=spot_id)
+        spot = spot[0]
+        #print(temp[0])
+        #print(spot)
     # if request.method == 'POST':
     #     if request.POST['form-type'] == 'edit-info':
     #         pw = request.POST['user-pw']
@@ -563,28 +571,40 @@ def remove_meta(request, meta_id):
 def neighbor(request):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    #userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" % request.user.pk)
+    #print(userinfo.query)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     ret = []
     spotlist = []
+    #print(userinfo.pk)
     if userinfo.charge:
-        ret = Neighbor.objects.all()
+        #ret = Neighbor.objects.all()
+        #print(ret.query)
+        ret = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor`")
     else:
-        cc = Cctv.objects.filter(manager=userinfo)
-        for i in range(len(cc)):
-            spot = list(Spot.objects.filter(spot_cctvs=(cc[i])))
+        #cc = Cctv.objects.filter(manager=userinfo)
+        #print(cc.query)
+        #print(userinfo.pk)
+        cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'" % userinfo.pk)
+        #print(cc.query)
+        for i in range(len(list(cc))):
+            s = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` INNER JOIN `all_cctv_spots` ON (`all_spot`.`id` = `all_cctv_spots`.`spot_id`) WHERE `all_cctv_spots`.`cctv_id` = '%s'" % cc[i].pk)
+            spot = list(s)
             for j in range(len(spot)):
                 if not spot[j] in spotlist:
                     spotlist = spotlist + [spot[j]]
             #print(spotlist)
         for s in spotlist:
             for l in spotlist:
-                for n in Neighbor.objects.filter(spot1=l, spot2=s):
+                temp = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE (`all_neighbor`.`spot1_id` = '%s' AND `all_neighbor`.`spot2_id` = '%s')" % (l.pk,s.pk))
+                #print(temp.query)
+                for n in temp:
                     if not n in ret:
                         #print(n)
-                        ret.append(n)   
+                        ret.append(n)
             #print(ret)
     #ret = Neighbor.objects.all()
     if request.method == 'POST':
@@ -593,30 +613,43 @@ def neighbor(request):
         f = request.POST.get('form-type',False)
         add = request.POST.get('neighbor-add', False)
         name = request.POST.get('neighbor-name', False)
-        n = Neighbor.objects.filter(name=q)
+        #n = Neighbor.objects.filter(name=q)
+        n = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE `all_neighbor`.`name` = '%s'" % q)
+        #print(n.query)
         #print(n)
         if o == 'name':
-            if n.count()>0: 
+            if len(list(n))>0: 
                 ret = n
             else:
                 ret = None
         elif o == 'spot':
-            if str(Spot.objects.filter(indoor_loc=q)) == '<QuerySet []>':
+            ret = []
+            spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`indoor_loc` = '%s'" % q)
+            #print(spot.query)
+            if str(spot) == '<QuerySet []>':
                 ret = None
-            for s in Spot.objects.filter(indoor_loc=q):
-                print(s)
-                for l in spotlist:
-                    for n in Neighbor.objects.filter(spot1=s, spot2=l):
-                        if not n in ret:
-                            ret.append(n)
-                    for n in Neighbor.objects.filter(spot2=l, spot1=s):
-                        if not n in ret:
-                            ret.append(n)
+            else:
+                for s in spot:
+                    #print(s)
+                    for l in spotlist:
+                        neighbor1 = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE (`all_neighbor`.`spot1_id` = '%s' AND `all_neighbor`.`spot2_id` = '%s')" % (s.pk,l.pk))
+                        neighbor2 = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE (`all_neighbor`.`spot1_id` = '%s' AND `all_neighbor`.`spot2_id` = '%s')" % (l.pk,s.pk))
+                        for n in neighbor1:
+                            #print(n)
+                            if not n in ret:
+                                ret.append(n)
+                        for n in neighbor2:
+                            #print(n)
+                            if not n in ret:
+                                ret.append(n)
         if f == 'add-neighbor':
             if userinfo.charge:
-                s1 = Spot.objects.get(indoor_loc=add.split('-')[0][1:])
-                s2 = Spot.objects.get(indoor_loc=add.split('-')[-1][:-1])
-                print(s1, s2)
+                s1 = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`indoor_loc` = '%s'" % add.split('-')[0][1:])[0]
+                s2 = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`indoor_loc` = '%s'" % add.split('-')[-1][:-1])[0]
+                #print(temp.query)
+                #s1 = Spot.objects.get(indoor_loc=add.split('-')[0][1:])
+                #s2 = Spot.objects.get(indoor_loc=add.split('-')[-1][:-1])
+                #print(s1, s2)
                 nn = Neighbor.objects.create(spot1=s1, spot2=s2)
                 #print(nn)
                 nn.name = name
@@ -627,9 +660,13 @@ def neighbor(request):
     return render(request, 'all/neighbor.html', data)
 
 def neighbor_specific(request, neighbor_id):
-    if Neighbor.objects.filter(pk=neighbor_id).count() > 0:
-        neighbor = Neighbor.objects.get(pk=neighbor_id)
-    spot = Spot.objects.all()
+    neighbor = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE `all_neighbor`.`id` = '%s'" % neighbor_id)
+    #print(neighbor)
+    if len(list(neighbor)) > 0:
+        neighbor = neighbor[0]
+    #spot = Spot.objects.all()
+    spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot`")
+    print(spot.query)
     if request.method == 'POST':
         if request.POST['form-type'] == 'edit-info':
             name = request.POST['neighbor-name']
@@ -644,32 +681,49 @@ def neighbor_specific(request, neighbor_id):
 def sequence(request):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/')
-    userinfo = Manager.objects.filter(user=request.user)
-    if userinfo.count() != 1:
+    #userinfo = Manager.objects.filter(user=request.user)
+    userinfo = Manager.objects.raw("SELECT `all_manager`.`id`, `all_manager`.`user_id`, `all_manager`.`name`, `all_manager`.`cell`, `all_manager`.`charge` FROM `all_manager` WHERE `all_manager`.`user_id` = '%s'" %request.user.pk)
+    #print(userinfo.query)
+    if len(list(userinfo)) != 1:
         return HttpResponseRedirect('/')
     userinfo = userinfo[0]
     neighbor = []
     spotlist = []
-    cc = Cctv.objects.filter(manager=userinfo)
-    for i in range(len(cc)):
-        spot = list(Spot.objects.filter(spot_cctvs=(cc[i])))
-        for j in range(len(spot)):
+    ##cc = Cctv.objects.filter(manager=userinfo)
+    cc = Cctv.objects.raw("SELECT `all_cctv`.`id`, `all_cctv`.`name`, `all_cctv`.`start_date`, `all_cctv`.`manager_id` FROM `all_cctv` WHERE `all_cctv`.`manager_id` = '%s'" %userinfo.pk)
+    #print(cc.query)
+    for i in range(len(list(cc))):
+        #spot = list(Spot.objects.filter(spot_cctvs=(cc[i])))
+        spot = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` INNER JOIN `all_cctv_spots` ON (`all_spot`.`id` = `all_cctv_spots`.`spot_id`) WHERE `all_cctv_spots`.`cctv_id` = '%s'" % cc[i].pk)
+        #print(spot.query)
+        for j in range(len(list(spot))):
             if not spot[j] in spotlist:
                 spotlist = spotlist + [spot[j]]
         #print(spotlist)
     for s in spotlist:
         for l in spotlist:
-            for n in Neighbor.objects.filter(spot1=l, spot2=s):
+            nei = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE (`all_neighbor`.`spot1_id` = '%s' AND `all_neighbor`.`spot2_id` = '%s')"%(l.pk, s.pk))
+            #print(nei.query)
+            for n in nei:
                 if not n in neighbor:
                     #print(n)
                     neighbor.append(n)
     if userinfo.charge:
-        ret = Sequence.objects.all()
-        seq = Sequence.objects.all()
+        #ret = Sequence.objects.all()
+        #print(ret.query)
+        ret = Sequence.objects.raw("SELECT `all_sequence`.`id` FROM `all_sequence`")
+        seq = Sequence.objects.raw("SELECT `all_sequence`.`id` FROM `all_sequence`")
+        #seq = Sequence.objects.all()
+        #print(seq.query)
     else:
         sequence = []
-        for seq in Sequence.objects.all():
+        #seqnum = Sequence.objects.all()
+        seqnum = Sequence.objects.raw("SELECT `all_sequence`.`id` FROM `all_sequence`")
+        #print(seqnum.query)
+        for seq in seqnum:
             match = False
+            temp = seq.neighbors.all()
+            print(temp.query)
             for nei in seq.neighbors.all():
                 for n in neighbor:
                     if nei == n:
@@ -713,9 +767,14 @@ def sequence(request):
                 new_seq = Sequence.objects.create()
                 new_seq.save()
                 for n in q.split(','):
-                    s1 = Spot.objects.get(indoor_loc=n.split('-')[0][1:])
-                    s2 = Spot.objects.get(indoor_loc=n.split('-')[-1][:-1])
-                    nn = Neighbor.objects.get(spot1=s1, spot2=s2)
+                    #s1 = Spot.objects.filter(indoor_loc=n.split('-')[0][1:])
+                    s1 = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`indoor_loc` = '%s'" % n.split('-')[0][1:])[0]
+                    #print(s1.query)
+                    #s2 = Spot.objects.get(indoor_loc=n.split('-')[-1][:-1])
+                    s2 = Spot.objects.raw("SELECT `all_spot`.`id`, `all_spot`.`indoor_loc`, `all_spot`.`floor_no`, `all_spot`.`dep_name`, `all_spot`.`address` FROM `all_spot` WHERE `all_spot`.`indoor_loc` = '%s'" % n.split('-')[-1][:-1])[0]
+                    #nn = Neighbor.objects.get(spot1=s1, spot2=s2)
+                    nn = Neighbor.objects.raw("SELECT `all_neighbor`.`id`, `all_neighbor`.`name`, `all_neighbor`.`spot1_id`, `all_neighbor`.`spot2_id` FROM `all_neighbor` WHERE (`all_neighbor`.`spot1_id` = '%s' AND `all_neighbor`.`spot2_id` = '%s')" % (s1.pk, s2.pk))[0]
+                    #print(nn.query)
                     new_seq.neighbors.add(nn)
                 new_seq.save()
     data = {
